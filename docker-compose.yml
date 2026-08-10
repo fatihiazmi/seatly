@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16.14
+    container_name: seatly-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: seatly
+      POSTGRES_PASSWORD: seatly
+      POSTGRES_DB: seatly_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - seatly-pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U seatly -d seatly_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  seatly-pgdata:

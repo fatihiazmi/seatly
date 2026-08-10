@@ -1,0 +1,135 @@
+name: tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DB_CONNECTION: pgsql
+  DB_HOST: 127.0.0.1
+  DB_PORT: 5432
+  DB_DATABASE: seatly_test
+  DB_USERNAME: seatly
+  DB_PASSWORD: seatly
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    # F1-04: PostgreSQL runs for real. An absent database is a failure, never a
+    # skipped success.
+    services:
+      postgres:
+        image: postgres:16.14
+        env:
+          POSTGRES_USER: seatly
+          POSTGRES_PASSWORD: seatly
+          POSTGRES_DB: seatly_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U seatly -d seatly_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_pgsql, pgsql, mbstring, intl, bcmath
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Validate configuration resolves to PostgreSQL
+        # Guards against a silent SQLite fallback making the rest of this job
+        # meaningless. RULE-004, NFR-001, ADR-002/004.
+        run: |
+          php artisan config:clear
+          DRIVER=$(php artisan tinker --execute="echo config('database.default');")
+          echo "database.default = $DRIVER"
+          test "$DRIVER" = "pgsql"
+
+      - name: Install PostgreSQL extensions required by the logical ERD
+        env:
+          PGPASSWORD: seatly
+        run: |
+          psql -h 127.0.0.1 -U seatly -d seatly_test -c 'CREATE EXTENSION IF NOT EXISTS btree_gist;'
+          psql -h 127.0.0.1 -U seatly -d seatly_test -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto;'
+          psql -h 127.0.0.1 -U seatly -d seatly_test -c 'SELECT extname FROM pg_extension ORDER BY 1;'
+
+      - name: Migrate against PostgreSQL
+        run: php artisan migrate --force
+
+      - name: Lint (Pint)
+        run: composer lint:check
+
+      - name: Static analysis (PHPStan)
+        run: composer types:check
+
+      - name: Front-end lint, format, and types
+        run: |
+          npm run lint:check
+          npm run format:check
+          npm run types:check
+
+      - name: Unit suite
+        run: php artisan test --testsuite=Unit
+
+      - name: Feature suite
+        run: php artisan test --testsuite=Feature
+
+      - name: Integration suite (real PostgreSQL)
+        run: php artisan test --testsuite=Integration
+
+      - name: Build assets
+        run: npm run build
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser suite (Playwright)
+        run: npx playwright test
+
+      - name: Retain evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: seatly-evidence-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+            storage/logs/
+          retention-days: 30
+          if-no-files-found: ignore
