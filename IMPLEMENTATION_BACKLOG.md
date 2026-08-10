@@ -509,6 +509,59 @@ Do not build polished geometry or animation.
 
 **Trace:** FR-004/007; RULE-004; AC-001/002.
 
+```text
+Status:              DONE (2026-08-10)
+Requirement IDs:     FR-003/004/005; RULE-001/004; ADR-005/007/012/014;
+                     AC-001/002
+Gate/P0 IDs:         G1, G2; prerequisite to G3
+Red evidence:        docs/evidence/C2-04/red.md — 17 of 21 cases failed on a
+                     missing route.
+Green evidence:      docs/evidence/C2-04/green.md — 173 tests / 372 assertions,
+                     Pint and PHPStan clean, plus curl against the real seeded
+                     database covering 200, draft 404, unknown 404, malformed
+                     404, and an availability change moving the version.
+Implementation notes: GET /showtimes/{public_id}/seat-map, public per ADR-014.
+                     Resolved on public_id only; the internal bigint does not
+                     resolve. A draft 404s because nothing is materialized before
+                     publication and an unpublished showtime should not be
+                     disclosed; cancelled and past showtimes are still served
+                     with on_sale false, so a customer on a stale link is told
+                     why rather than shown a 404 (FR-003).
+
+                     Two rules are shared with the write path so the two cannot
+                     disagree. On sale is derived from the PostgreSQL clock
+                     (RC-03). An expired HELD row reads as selectable, matching
+                     LOGICAL_ERD.md 5.1 — reporting it unavailable would tell a
+                     customer no when a hold request would say yes.
+
+                     Availability is a boolean, not the stored status. HELD
+                     versus CONFIRMED would disclose to an unauthenticated
+                     stranger whether someone is midway through checkout, and
+                     FR-004 asks only for selectable versus unavailable. Verified
+                     by asserting the response contains neither the status nor
+                     the block reason.
+
+                     inventory_version is the sum of row versions: monotonic
+                     because every transition increments its row. L4-04 builds
+                     the polling; this only exposes the number so it can.
+
+                     Companion pairs are exposed as linked_seat_id in both
+                     directions, since PP-10 requires the UI to identify pairing.
+
+                     One real defect: a malformed identifier reached PostgreSQL,
+                     where comparing it to a uuid column raised a cast error and
+                     the endpoint answered 500 instead of 404. Fixed with
+                     whereUuid on the route so it never gets that far.
+
+                     Two of my own test assertions were wrong. A substring check
+                     for leaked internal names failed on linked_seat_id, which
+                     legitimately contains "seat_id" — replaced with key and
+                     value assertions. And the fixture set seat_number without
+                     matching display_label, so the ordering assertion compared
+                     against labels from the factory sequence.
+Open decisions:      none
+```
+
 **Phase exit:** Tests can create a published showtime and authoritative inventory
 without direct manual database edits.
 
