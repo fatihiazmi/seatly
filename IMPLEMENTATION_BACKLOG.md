@@ -261,11 +261,20 @@ CI must run, as applicable:
 Do not mark absent browser or PostgreSQL execution as skipped success.
 
 ```text
-Status:              IN PROGRESS (2026-08-10) — written, never executed
+Status:              BLOCKED (2026-08-10) — written and pushed, cannot execute
 Requirement IDs:     NFR-001; ADR-002/004
 Gate/P0 IDs:         G1
 Red evidence:        n/a
-Green evidence:      none yet. The repository has no remote, so no run exists.
+Green evidence:      none. Run 31361221981 on the first push to
+                     github.com/fatihiazmi/seatly failed in 2 seconds with zero
+                     steps executed and an empty runner_name — GitHub never
+                     allocated a runner. The workflow file itself is valid: it
+                     parses, declares 19 steps and the postgres service, and
+                     Actions is enabled on the repository (allowed_actions: all).
+                     This is an account-level Actions block, consistent with the
+                     GitHub billing lock recorded on 2026-08-05. It is not a
+                     defect in this workflow and cannot be fixed from the
+                     repository.
 Implementation notes: .github/workflows/tests.yml runs postgres:16.14 as a
                      service, installs btree_gist and pgcrypto, asserts
                      config('database.default') is pgsql before anything else so a
@@ -275,8 +284,10 @@ Implementation notes: .github/workflows/tests.yml runs postgres:16.14 as a
                      asset build, and Playwright. Evidence is uploaded on always().
                      PHP pinned to 8.5 and Node to 24 to match the development
                      machine.
-Open decisions:      none. Blocked only on pushing to a remote — this item cannot
-                     become DONE from a workflow file that has never run.
+Open decisions:      none. Blocked on the GitHub account's Actions billing being
+                     restored. This item cannot become DONE from a workflow file
+                     that has never run, and no amount of editing it will change
+                     that.
 ```
 
 ### F1-05 — Architecture skeleton

@@ -61,7 +61,7 @@ Completed in Phase 1 on 2026-08-10 (`F1-01`–`F1-04`). Evidence in
 - [x] Configure PostgreSQL-only development and test environments (`postgres:16.14`, `seatly_dev` + `seatly_test`, no SQLite at any layer).
 - [x] Add Vue 3/Inertia and authentication foundation (Vue 3.5.41, Inertia `v3.3.1`, Fortify `v1.37.3`).
 - [x] Establish Pint/static-analysis/test/Playwright commands (all verified; see `CLAUDE.md` §Commands).
-- [x] Establish CI using real PostgreSQL (`.github/workflows/tests.yml`, `postgres:16.14` service; not yet executed — no remote).
+- [ ] Establish CI using real PostgreSQL. `.github/workflows/tests.yml` is written and pushed, but GitHub allocated no runner (run `31361221981`, 2 s, zero steps) — an account-level Actions block, not a workflow defect. See `F1-04`.
 - [ ] Add factories, deterministic fixtures, and concurrency harness.
 
 ## Hard stop gates
