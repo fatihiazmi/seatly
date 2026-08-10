@@ -149,22 +149,37 @@ Coverage percentage and code completion do not override a failed release gate.
 
 ## Commands
 
-Until Laravel is initialized, commands in project documentation are placeholders.
-Do not invent working commands.
+Every command below was run successfully in this repository on 2026-08-10.
+Commands still shown as placeholders have no implementation yet — do not invent
+them.
 
-After initialization, replace these tokens with verified repository commands:
+The database must be running before anything that touches PostgreSQL:
 
-- `<BOOTSTRAP_COMMAND>`
-- `<DEV_COMMAND>`
-- `<PHP_TEST_COMMAND>`
-- `<PHP_FOCUSED_TEST_COMMAND>`
-- `<POSTGRES_INTEGRATION_COMMAND>`
-- `<CONCURRENCY_COMMAND>`
-- `<INVARIANT_CHECK_COMMAND>`
-- `<PLAYWRIGHT_COMMAND>`
-- `<LINT_COMMAND>`
-- `<STATIC_ANALYSIS_COMMAND>`
-- `<CI_COMMAND>`
+```bash
+docker compose up -d          # postgres:16.14, seatly_dev + seatly_test on 5432
+docker compose down           # stop; add -v to discard the data volume
+```
 
-Only document a command after running it successfully in the initialized
-repository.
+| Purpose | Command |
+|---|---|
+| Bootstrap | `composer install && npm install && cp .env.example .env && php artisan key:generate && php artisan migrate` |
+| Dev server | `composer dev` |
+| All PHP tests | `php artisan test` |
+| Focused PHP test | `php artisan test --filter=<TestClassOrMethod>` |
+| Unit layer only | `php artisan test --testsuite=Unit` |
+| Feature layer only | `php artisan test --testsuite=Feature` |
+| PostgreSQL integration | `php artisan test --testsuite=Integration` |
+| Browser | `npx playwright test` (or `npm run test:browser`) |
+| Lint | `composer lint:check` (write mode: `composer lint`) |
+| Static analysis | `composer types:check` |
+| Front-end checks | `npm run lint:check && npm run format:check && npm run types:check` |
+| Full local CI chain | `composer ci:check` |
+
+Not yet implemented — these arrive with Phase 3:
+
+- `<CONCURRENCY_COMMAND>` — the same-seat contention harness (`H3-04`).
+- `<INVARIANT_CHECK_COMMAND>` — post-run invariant SQL (`H3-06`).
+
+Seatly is PostgreSQL-only. `Tests\Integration\IntegrationTestCase` fails loudly
+if the default connection is not `pgsql`, because SQLite would report success
+without exercising any of the behaviour the P0 invariants depend on.

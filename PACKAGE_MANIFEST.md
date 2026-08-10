@@ -1,5 +1,11 @@
 # Seatly Sprint 0 Review Package Manifest
 
+> **Historical.** This manifest describes the package submitted for Sprint 0
+> review, and the `SHA256SUMS.txt` beside it hashes that package. Sprint 0 exited
+> on 2026-08-10 and the Laravel application was initialized the same day, so the
+> "Deliberate exclusions" below no longer describe the repository — only what the
+> review package contained. Kept as a record of what was reviewed.
+
 **Package date:** 2026-08-10  
 **Purpose:** Review Sprint 0 product, domain, data, delivery, release, and Claude Code implementation artifacts.  
 **Application scaffold:** Not included.

@@ -161,6 +161,26 @@ No ambiguity has been silently converted into implementation behavior.
 - Initialize Laravel with Vue 3/Inertia.
 - Include no speculative packages.
 
+```text
+Status:              DONE (2026-08-10)
+Requirement IDs:     BR-02; ADR-002
+Gate/P0 IDs:         G1
+Red evidence:        n/a — initialization item, no behavioural test
+Green evidence:      docs/evidence/F1-03/green.md version matrix; composer.lock;
+                     package-lock.json
+Implementation notes: laravel/vue-starter-kit main branch, cloned and de-gitted
+                     rather than composer create-project, because the tagged
+                     package v1.0.2 still pins laravel/framework ^12.0 while the
+                     main branch targets ^13.17. Resolved to framework v13.24.0
+                     on PHP 8.5.3. Ships Inertia v3.3.1, Fortify v1.37.3 (auth
+                     foundation), Wayfinder, Chisel, Pint, Larastan, PHPUnit
+                     12.5.33 — PHPUnit rather than Pest, which CLAUDE.md permits.
+                     Playwright 1.62.1 added; nothing else installed. Removed the
+                     starter kit's post-create-project-cmd sqlite touch, which
+                     would have created database/database.sqlite.
+Open decisions:      none
+```
+
 ### F1-02 — Real PostgreSQL environment
 
 - Configure separate development and integration databases.
@@ -170,12 +190,60 @@ No ambiguity has been silently converted into implementation behavior.
 
 **Trace:** BR-02; RULE-004; NFR-001; ADR-002/004.
 
+```text
+Status:              DONE (2026-08-10)
+Requirement IDs:     BR-02; RULE-004; NFR-001; ADR-002/004
+Gate/P0 IDs:         G1
+Red evidence:        docs/evidence/F1-03/red.md (integration layer)
+Green evidence:      docs/evidence/F1-03/green.md, incl. the SQLite-guard section
+Implementation notes: docker-compose.yml pins postgres:16.14 to match the psql
+                     client already on the machine. docker/postgres/init creates
+                     seatly_test alongside seatly_dev and installs btree_gist and
+                     pgcrypto in both, per LOGICAL_ERD.md "Required extensions".
+                     PostgreSQL 18 was considered and rejected: its temporal
+                     WITHOUT OVERLAPS constraint duplicates the GiST exclusion
+                     constraint the ERD already specifies, uuidv7 would leak
+                     creation time through public_id, and pg_dump 16 cannot dump
+                     an 18 server — friction against the Phase 7 restore gate for
+                     no feature. phpunit.xml points every suite at seatly_test;
+                     no layer touches SQLite. Tests\Integration\IntegrationTestCase
+                     fails with an explanatory message when the driver is not
+                     pgsql — verified by running the suite with DB_CONNECTION=sqlite,
+                     which failed all five cases rather than passing.
+Open decisions:      none
+```
+
 ### F1-03 — Test-first project skeleton
 
 - Add one deliberately failing smoke test for each configured test layer.
 - Demonstrate red before adding the minimum setup that makes it green.
 - Verify unit, PostgreSQL integration, and Playwright execution separately.
 - Replace command placeholders only with commands that actually ran.
+
+```text
+Status:              DONE (2026-08-10)
+Requirement IDs:     BR-02; RULE-004; NFR-001
+Gate/P0 IDs:         G1
+Red evidence:        docs/evidence/F1-03/red.md — Unit, Feature, and Integration
+                     each failed for its stated reason before any setup was added.
+                     Browser layer red captured separately: expected 418, got 200.
+Green evidence:      docs/evidence/F1-03/green.md — Unit 3, Feature 40,
+                     Integration 5, Browser 2. composer test (Pint + PHPStan +
+                     48 tests, 150 assertions) passes.
+Implementation notes: four layers, run separately. Unit is plain PHPUnit with no
+                     container. Feature boots the app and serves GET /.
+                     Integration extends IntegrationTestCase and asserts server
+                     version 16.x, both required extensions, a zero-offset server
+                     clock, and timestamptz round-tripping. Browser is Playwright
+                     against php artisan serve. Two of my own green assertions
+                     were themselves wrong and had to be corrected: PostgreSQL
+                     reports its session zone as 'Etc/UTC' not 'UTC' (now asserts
+                     the offset), and 18.50 * 3 is exactly 55.5 in IEEE 754, so
+                     that made a useless float-precision example (now 0.10 + 0.20).
+                     tsconfig.json extended to cover tests/Browser and the
+                     Playwright config so eslint and vue-tsc see them.
+Open decisions:      none
+```
 
 ### F1-04 — CI skeleton
 
@@ -191,6 +259,25 @@ CI must run, as applicable:
 - artifact retention for evidence.
 
 Do not mark absent browser or PostgreSQL execution as skipped success.
+
+```text
+Status:              IN PROGRESS (2026-08-10) — written, never executed
+Requirement IDs:     NFR-001; ADR-002/004
+Gate/P0 IDs:         G1
+Red evidence:        n/a
+Green evidence:      none yet. The repository has no remote, so no run exists.
+Implementation notes: .github/workflows/tests.yml runs postgres:16.14 as a
+                     service, installs btree_gist and pgcrypto, asserts
+                     config('database.default') is pgsql before anything else so a
+                     silent SQLite fallback cannot make the job meaningless,
+                     migrates, then runs Pint, PHPStan, the front-end lint/format/
+                     type checks, the three PHP suites separately, a production
+                     asset build, and Playwright. Evidence is uploaded on always().
+                     PHP pinned to 8.5 and Node to 24 to match the development
+                     machine.
+Open decisions:      none. Blocked only on pushing to a remote — this item cannot
+                     become DONE from a workflow file that has never run.
+```
 
 ### F1-05 — Architecture skeleton
 

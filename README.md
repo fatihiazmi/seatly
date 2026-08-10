@@ -8,7 +8,7 @@ The project is designed to demonstrate more than CRUD: atomic multi-seat holds, 
 
 - Project type: Greenfield
 - Council verdict: Conditional Go
-- Current phase: Sprint 0 — review candidate; Laravel initialization intentionally deferred to Sprint 1
+- Current phase: Phase 1 — Sprint 0 exited 2026-08-10; Laravel initialized the same day (`F1-01`–`F1-03` done, `F1-04` written but unrun)
 - Product baseline: MVP policies and operational targets approved on 2026-08-10; `PD-01`–`PD-10` resolved the same day as `ADR-015`, `ADR-016`, `ADR-017`
 - Open decisions remaining: `D14` (QR payload detail), `D20` (named approvers), hall/seat versioning after publication — none block a slice
 - Baseline reconciliation (`S0-01`) applied 2026-08-10 — see [docs/BASELINE_RECONCILIATION.md](docs/BASELINE_RECONCILIATION.md)
@@ -20,6 +20,30 @@ The project is designed to demonstrate more than CRUD: atomic multi-seat holds, 
 > For one showtime and one seat, there can be at most one confirmed booking.
 
 PostgreSQL is the final authority for seat ownership. Browser state, cache, application memory, and background workers must never be the final allocation authority.
+
+## Running it locally
+
+```bash
+docker compose up -d                  # postgres:16.14 — seatly_dev + seatly_test
+composer install && npm install
+cp .env.example .env && php artisan key:generate
+php artisan migrate
+composer dev                          # web, queue worker, log tail, and Vite
+```
+
+Tests, by layer:
+
+```bash
+php artisan test --testsuite=Unit
+php artisan test --testsuite=Feature
+php artisan test --testsuite=Integration   # real PostgreSQL; fails loudly on SQLite
+npx playwright test
+composer ci:check                          # the whole chain
+```
+
+Pinned as of 2026-08-10: Laravel `v13.24.0` · PHP 8.5.3 · PostgreSQL 16.14 ·
+Node 24.13.1 · Vue 3.5.41 · Inertia `v3.3.1` · PHPUnit 12.5.33 · Playwright 1.62.1.
+Full matrix and harness evidence in [docs/evidence/F1-03/](docs/evidence/F1-03/).
 
 ## Documents
 

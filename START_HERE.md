@@ -1,11 +1,13 @@
 # Start Here
 
-Seatly currently contains the approved review material and implementation
-contract. It intentionally does not contain a Laravel scaffold.
+Seatly contains the approved review material, the implementation contract, and —
+since 2026-08-10 — an initialized Laravel application. Sprint 0 exited that day;
+`F1-01`–`F1-03` are done and `F1-04` is written but unrun.
 
-Do not begin by generating features from the project brief. First establish
-traceability, resolve blockers for the next slice, and initialize a reproducible
-Laravel/PostgreSQL test environment.
+Do not begin by generating features from the project brief. Take one backlog
+item, name its requirement and gate IDs, and write the failing test first.
+
+Run `docker compose up -d` before anything that touches the database.
 
 ## 1. Read the sources in order
 
@@ -105,24 +107,19 @@ Initialization must establish:
 - CI skeleton;
 - verified project commands.
 
-Until that work is complete, use these placeholders:
+All of the above is in place except the scheduler process, which has nothing to
+schedule yet. The verified commands live in `CLAUDE.md` §Commands; evidence for
+the test harness is in `docs/evidence/F1-03/`.
+
+Two placeholders remain, and both arrive in Phase 3 with the work they describe:
 
 ```text
-<BOOTSTRAP_COMMAND>
-<DEV_COMMAND>
-<PHP_TEST_COMMAND>
-<PHP_FOCUSED_TEST_COMMAND>
-<POSTGRES_INTEGRATION_COMMAND>
-<CONCURRENCY_COMMAND>
-<INVARIANT_CHECK_COMMAND>
-<PLAYWRIGHT_COMMAND>
-<LINT_COMMAND>
-<STATIC_ANALYSIS_COMMAND>
-<CI_COMMAND>
+<CONCURRENCY_COMMAND>     H3-04 same-seat contention harness
+<INVARIANT_CHECK_COMMAND> H3-06 post-run invariant SQL
 ```
 
-Replace each placeholder only after the corresponding command has run
-successfully. Record the verified command, environment assumptions, and result.
+Replace each only after the corresponding command has run successfully. Record
+the verified command, environment assumptions, and result.
 
 Do not treat SQLite, an in-memory repository, or mocked database locking as a
 substitute for PostgreSQL.
