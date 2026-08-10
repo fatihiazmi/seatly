@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  id="Definitions_Seatly"
+  targetNamespace="https://seatly.local/bpmn">
+
+  <bpmn:message id="Message_BrowseRequest" name="Browse request"/>
+  <bpmn:message id="Message_BrowseResults" name="Browse and seat-map result"/>
+  <bpmn:message id="Message_HoldRequest" name="Seat-hold request"/>
+  <bpmn:message id="Message_HoldOutcome" name="Seat-hold outcome"/>
+  <bpmn:message id="Message_CheckoutRequest" name="Checkout request"/>
+  <bpmn:message id="Message_CheckoutPending" name="Checkout pending"/>
+  <bpmn:message id="Message_PaymentInitiation" name="Payment initiation"/>
+  <bpmn:message id="Message_PaymentAck" name="Payment acknowledgement"/>
+  <bpmn:message id="Message_PaymentCallback" name="Payment callback"/>
+  <bpmn:message id="Message_BookingOutcome" name="Booking outcome"/>
+  <bpmn:message id="Message_StatusRequest" name="Status request"/>
+  <bpmn:message id="Message_StatusResult" name="Status result"/>
+  <bpmn:message id="Message_ShowtimeCancelled" name="Showtime cancelled"/>
+
+  <bpmn:process id="Process_Customer" name="Customer Booking Journey" isExecutable="false">
+    <bpmn:startEvent id="C_Start" name="Booking need identified"/>
+    <bpmn:userTask id="C_Login" name="Log in or register — required from the hold request onward (ADR-014)"/>
+    <bpmn:sendTask id="C_Browse" name="Request movies and showtimes" messageRef="Message_BrowseRequest"/>
+    <bpmn:receiveTask id="C_ReceiveBrowse" name="Receive browse results and seat map" messageRef="Message_BrowseResults"/>
+    <bpmn:userTask id="C_Select" name="Select showtime and seats"/>
+    <bpmn:sendTask id="C_SendHold" name="Request atomic seat hold" messageRef="Message_HoldRequest"/>
+    <bpmn:receiveTask id="C_ReceiveHold" name="Receive hold outcome" messageRef="Message_HoldOutcome"/>
+    <bpmn:exclusiveGateway id="C_GW_Held" name="Hold successful?" default="C_F09"/>
+    <bpmn:userTask id="C_Refresh" name="Review conflict and select again"/>
+    <bpmn:userTask id="C_ReviewCheckout" name="Review seats, expiry and price snapshot"/>
+    <bpmn:exclusiveGateway id="C_GW_Proceed" name="Proceed to payment?" default="C_F13"/>
+    <bpmn:sendTask id="C_SendCheckout" name="Initiate checkout" messageRef="Message_CheckoutRequest"/>
+    <bpmn:receiveTask id="C_ReceivePending" name="Receive pending acknowledgement" messageRef="Message_CheckoutPending"/>
+    <bpmn:eventBasedGateway id="C_GW_OutcomeWait" name="Await outcome or status refresh"/>
+    <bpmn:intermediateCatchEvent id="C_CatchOutcome" name="Booking outcome received">
+      <bpmn:messageEventDefinition messageRef="Message_BookingOutcome"/>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="C_StatusTimer" name="Status refresh interval">
+      <bpmn:timerEventDefinition><bpmn:timeDuration xsi:type="bpmn:tFormalExpression">${STATUS_REFRESH_INTERVAL}</bpmn:timeDuration></bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="C_SendStatus" name="Request authoritative status" messageRef="Message_StatusRequest"/>
+    <bpmn:receiveTask id="C_ReceiveStatus" name="Receive authoritative status" messageRef="Message_StatusResult"/>
+    <bpmn:exclusiveGateway id="C_GW_Final" name="Final outcome?" default="C_F25"/>
+    <bpmn:userTask id="C_ViewConfirmation" name="View booking reference and QR"/>
+    <bpmn:userTask id="C_ViewNonConfirmed" name="View failed, expired, cancelled or review outcome"/>
+    <bpmn:endEvent id="C_EndConfirmed" name="Booking confirmed"/>
+    <bpmn:endEvent id="C_EndNotConfirmed" name="Journey ended without confirmation"/>
+    <bpmn:endEvent id="C_EndAbandoned" name="Checkout abandoned"/>
+
+    <bpmn:sequenceFlow id="C_F01" sourceRef="C_Start" targetRef="C_Browse"/>
+    <bpmn:sequenceFlow id="C_F02" sourceRef="C_Browse" targetRef="C_ReceiveBrowse"/>
+    <bpmn:sequenceFlow id="C_F03" sourceRef="C_ReceiveBrowse" targetRef="C_Select"/>
+    <bpmn:sequenceFlow id="C_F04" sourceRef="C_Select" targetRef="C_Login"/>
+    <bpmn:sequenceFlow id="C_F05" sourceRef="C_Login" targetRef="C_SendHold"/>
+    <bpmn:sequenceFlow id="C_F06" sourceRef="C_SendHold" targetRef="C_ReceiveHold"/>
+    <bpmn:sequenceFlow id="C_F07" sourceRef="C_ReceiveHold" targetRef="C_GW_Held"/>
+    <bpmn:sequenceFlow id="C_F08" sourceRef="C_GW_Held" targetRef="C_ReviewCheckout"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">holdOutcome = 'held'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="C_F09" sourceRef="C_GW_Held" targetRef="C_Refresh"/>
+    <bpmn:sequenceFlow id="C_F10" sourceRef="C_Refresh" targetRef="C_Browse"/>
+    <bpmn:sequenceFlow id="C_F11" sourceRef="C_ReviewCheckout" targetRef="C_GW_Proceed"/>
+    <bpmn:sequenceFlow id="C_F12" sourceRef="C_GW_Proceed" targetRef="C_SendCheckout"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">proceed = true</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="C_F13" sourceRef="C_GW_Proceed" targetRef="C_EndAbandoned"/>
+    <bpmn:sequenceFlow id="C_F14" sourceRef="C_SendCheckout" targetRef="C_ReceivePending"/>
+    <bpmn:sequenceFlow id="C_F15" sourceRef="C_ReceivePending" targetRef="C_GW_OutcomeWait"/>
+    <bpmn:sequenceFlow id="C_F16" sourceRef="C_GW_OutcomeWait" targetRef="C_CatchOutcome"/>
+    <bpmn:sequenceFlow id="C_F17" sourceRef="C_GW_OutcomeWait" targetRef="C_StatusTimer"/>
+    <bpmn:sequenceFlow id="C_F18" sourceRef="C_StatusTimer" targetRef="C_SendStatus"/>
+    <bpmn:sequenceFlow id="C_F19" sourceRef="C_SendStatus" targetRef="C_ReceiveStatus"/>
+    <bpmn:sequenceFlow id="C_F20" sourceRef="C_ReceiveStatus" targetRef="C_GW_Final"/>
+    <bpmn:sequenceFlow id="C_F21" sourceRef="C_CatchOutcome" targetRef="C_GW_Final"/>
+    <bpmn:sequenceFlow id="C_F22" sourceRef="C_GW_Final" targetRef="C_ViewConfirmation"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">bookingStatus = 'confirmed'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="C_F23" sourceRef="C_GW_Final" targetRef="C_GW_OutcomeWait"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">status = 'pending' or status = 'review'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="C_F25" sourceRef="C_GW_Final" targetRef="C_ViewNonConfirmed"/>
+    <bpmn:sequenceFlow id="C_F26" sourceRef="C_ViewConfirmation" targetRef="C_EndConfirmed"/>
+    <bpmn:sequenceFlow id="C_F27" sourceRef="C_ViewNonConfirmed" targetRef="C_EndNotConfirmed"/>
+  </bpmn:process>
+
+  <bpmn:process id="Process_SeatlyBooking" name="Seatly Booking Orchestration" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Seatly">
+      <bpmn:lane id="Lane_CustomerService" name="Customer Service">
+        <bpmn:flowNodeRef>S_StartBrowse</bpmn:flowNodeRef><bpmn:flowNodeRef>S_QueryCatalogue</bpmn:flowNodeRef><bpmn:flowNodeRef>S_SendBrowse</bpmn:flowNodeRef><bpmn:flowNodeRef>S_SendConflict</bpmn:flowNodeRef><bpmn:flowNodeRef>S_SendHeld</bpmn:flowNodeRef><bpmn:flowNodeRef>S_SendPending</bpmn:flowNodeRef><bpmn:flowNodeRef>S_SendOutcome</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_InventoryBooking" name="Inventory and Booking">
+        <bpmn:flowNodeRef>S_CatchHold</bpmn:flowNodeRef><bpmn:flowNodeRef>S_ValidateHold</bpmn:flowNodeRef><bpmn:flowNodeRef>S_AtomicHold</bpmn:flowNodeRef><bpmn:flowNodeRef>S_GW_Hold</bpmn:flowNodeRef><bpmn:flowNodeRef>S_CreateSnapshot</bpmn:flowNodeRef><bpmn:flowNodeRef>S_GW_WaitCheckout</bpmn:flowNodeRef><bpmn:flowNodeRef>S_CatchCheckout</bpmn:flowNodeRef><bpmn:flowNodeRef>S_TimerHoldBeforeCheckout</bpmn:flowNodeRef><bpmn:flowNodeRef>S_ExpireBeforeCheckout</bpmn:flowNodeRef><bpmn:flowNodeRef>S_ValidateCheckout</bpmn:flowNodeRef><bpmn:flowNodeRef>S_AtomicConfirm</bpmn:flowNodeRef><bpmn:flowNodeRef>S_CreateReferenceQR</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_PaymentWorker" name="Payment and Reconciliation">
+        <bpmn:flowNodeRef>S_CreateAttempt</bpmn:flowNodeRef><bpmn:flowNodeRef>S_SendPayment</bpmn:flowNodeRef><bpmn:flowNodeRef>S_GW_WaitPayment</bpmn:flowNodeRef><bpmn:flowNodeRef>S_CatchCallback</bpmn:flowNodeRef><bpmn:flowNodeRef>S_TimerPayment</bpmn:flowNodeRef><bpmn:flowNodeRef>S_TimerHold</bpmn:flowNodeRef><bpmn:flowNodeRef>S_ValidateCallback</bpmn:flowNodeRef><bpmn:flowNodeRef>S_GW_Callback</bpmn:flowNodeRef><bpmn:flowNodeRef>S_RecordFailure</bpmn:flowNodeRef><bpmn:flowNodeRef>S_RecordTimeout</bpmn:flowNodeRef><bpmn:flowNodeRef>S_RecordLate</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="S_StartBrowse" name="Browse request received"><bpmn:messageEventDefinition messageRef="Message_BrowseRequest"/></bpmn:startEvent>
+    <bpmn:serviceTask id="S_QueryCatalogue" name="Return bookable catalogue and accessible seat state"/>
+    <bpmn:sendTask id="S_SendBrowse" name="Send browse data" messageRef="Message_BrowseResults"/>
+    <bpmn:intermediateCatchEvent id="S_CatchHold" name="Hold request received"><bpmn:messageEventDefinition messageRef="Message_HoldRequest"/></bpmn:intermediateCatchEvent>
+    <bpmn:businessRuleTask id="S_ValidateHold" name="Validate customer, showtime and seat selection"/>
+    <bpmn:serviceTask id="S_AtomicHold" name="Atomically hold all requested seats or none"/>
+    <bpmn:exclusiveGateway id="S_GW_Hold" name="Hold committed?" default="S_F09"/>
+    <bpmn:sendTask id="S_SendConflict" name="Send conflict outcome" messageRef="Message_HoldOutcome"/>
+    <bpmn:endEvent id="S_EndConflict" name="No hold created"/>
+    <bpmn:serviceTask id="S_CreateSnapshot" name="Create price snapshot and authoritative expiry"/>
+    <bpmn:sendTask id="S_SendHeld" name="Send held outcome" messageRef="Message_HoldOutcome"/>
+    <bpmn:eventBasedGateway id="S_GW_WaitCheckout" name="Await checkout or hold expiry"/>
+    <bpmn:intermediateCatchEvent id="S_CatchCheckout" name="Checkout request received"><bpmn:messageEventDefinition messageRef="Message_CheckoutRequest"/></bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="S_TimerHoldBeforeCheckout" name="Authoritative hold expiry"><bpmn:timerEventDefinition><bpmn:timeDate xsi:type="bpmn:tFormalExpression">${hold.expiresAt}</bpmn:timeDate></bpmn:timerEventDefinition></bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="S_ExpireBeforeCheckout" name="Expire active hold"/>
+    <bpmn:businessRuleTask id="S_ValidateCheckout" name="Validate ownership, hold, showtime and retry"/>
+    <bpmn:exclusiveGateway id="S_GW_Checkout" name="Checkout valid?" default="S_F20"/>
+    <bpmn:sendTask id="S_SendRejected" name="Send expired or invalid outcome" messageRef="Message_BookingOutcome"/>
+    <bpmn:endEvent id="S_EndRejected" name="Checkout rejected"/>
+    <bpmn:serviceTask id="S_CreateAttempt" name="Create or recover idempotent payment attempt"/>
+    <bpmn:sendTask id="S_SendPayment" name="Send simulated payment initiation" messageRef="Message_PaymentInitiation"/>
+    <bpmn:sendTask id="S_SendPending" name="Send pending acknowledgement" messageRef="Message_CheckoutPending"/>
+    <bpmn:eventBasedGateway id="S_GW_WaitPayment" name="Wait for callback, timeout or hold expiry"/>
+    <bpmn:intermediateCatchEvent id="S_CatchCallback" name="Payment callback received"><bpmn:messageEventDefinition messageRef="Message_PaymentCallback"/></bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="S_TimerPayment" name="Payment timeout"><bpmn:timerEventDefinition><bpmn:timeDate xsi:type="bpmn:tFormalExpression">${paymentAttempt.timeoutAt}</bpmn:timeDate></bpmn:timerEventDefinition></bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="S_TimerHold" name="Hold expires during payment"><bpmn:timerEventDefinition><bpmn:timeDate xsi:type="bpmn:tFormalExpression">${hold.expiresAt}</bpmn:timeDate></bpmn:timerEventDefinition></bpmn:intermediateCatchEvent>
+    <bpmn:businessRuleTask id="S_ValidateCallback" name="Validate, correlate and deduplicate callback"/>
+    <bpmn:exclusiveGateway id="S_GW_Callback" name="Effective callback outcome?" default="S_F35"/>
+    <bpmn:serviceTask id="S_AtomicConfirm" name="Revalidate and atomically confirm booking"/>
+    <bpmn:exclusiveGateway id="S_GW_Confirmed" name="Confirmation committed?" default="S_F38"/>
+    <bpmn:serviceTask id="S_CreateReferenceQR" name="Create booking reference and QR linkage"/>
+    <bpmn:serviceTask id="S_RecordFailure" name="Record explicit failure and approved hold treatment"/>
+    <bpmn:serviceTask id="S_RecordTimeout" name="Record timeout and pending reconciliation"/>
+    <bpmn:serviceTask id="S_RecordLate" name="Record late/invalid/contradictory outcome for review"/>
+    <bpmn:sendTask id="S_SendOutcome" name="Send authoritative booking outcome" messageRef="Message_BookingOutcome"/>
+    <bpmn:endEvent id="S_EndConfirmed" name="Confirmed"/>
+    <bpmn:endEvent id="S_EndNotConfirmed" name="Closed without confirmation"/>
+
+    <bpmn:subProcess id="S_ES_Status" name="Status recovery" triggeredByEvent="true">
+      <bpmn:startEvent id="S_ES_StatusStart" name="Status request" isInterrupting="false"><bpmn:messageEventDefinition messageRef="Message_StatusRequest"/></bpmn:startEvent>
+      <bpmn:businessRuleTask id="S_ES_AuthorizeStatus" name="Authorize status access"/>
+      <bpmn:sendTask id="S_ES_SendStatus" name="Send authoritative status" messageRef="Message_StatusResult"/>
+      <bpmn:endEvent id="S_ES_StatusEnd"/>
+      <bpmn:sequenceFlow id="S_ES_SF01" sourceRef="S_ES_StatusStart" targetRef="S_ES_AuthorizeStatus"/>
+      <bpmn:sequenceFlow id="S_ES_SF02" sourceRef="S_ES_AuthorizeStatus" targetRef="S_ES_SendStatus"/>
+      <bpmn:sequenceFlow id="S_ES_SF03" sourceRef="S_ES_SendStatus" targetRef="S_ES_StatusEnd"/>
+    </bpmn:subProcess>
+
+    <bpmn:subProcess id="S_ES_Cancel" name="Showtime cancellation race" triggeredByEvent="true">
+      <bpmn:startEvent id="S_ES_CancelStart" name="Showtime cancellation received" isInterrupting="true"><bpmn:messageEventDefinition messageRef="Message_ShowtimeCancelled"/></bpmn:startEvent>
+      <bpmn:businessRuleTask id="S_ES_Revalidate" name="Inspect committed booking, hold and payment state"/>
+      <bpmn:exclusiveGateway id="S_ES_GW_Committed" name="Booking already committed?" default="S_ES_CF04"/>
+      <bpmn:serviceTask id="S_ES_MarkAffected" name="Mark confirmed booking affected under approved remedy"/>
+      <bpmn:serviceTask id="S_ES_StopAttempt" name="Prevent confirmation and preserve reconciliation"/>
+      <bpmn:sendTask id="S_ES_SendOutcome" name="Send cancellation outcome" messageRef="Message_BookingOutcome"/>
+      <bpmn:endEvent id="S_ES_End" name="Cancellation disposition recorded"/>
+      <bpmn:sequenceFlow id="S_ES_CF01" sourceRef="S_ES_CancelStart" targetRef="S_ES_Revalidate"/>
+      <bpmn:sequenceFlow id="S_ES_CF02" sourceRef="S_ES_Revalidate" targetRef="S_ES_GW_Committed"/>
+      <bpmn:sequenceFlow id="S_ES_CF03" sourceRef="S_ES_GW_Committed" targetRef="S_ES_MarkAffected"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">bookingCommitted = true</bpmn:conditionExpression></bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="S_ES_CF04" sourceRef="S_ES_GW_Committed" targetRef="S_ES_StopAttempt"/>
+      <bpmn:sequenceFlow id="S_ES_CF05" sourceRef="S_ES_MarkAffected" targetRef="S_ES_SendOutcome"/>
+      <bpmn:sequenceFlow id="S_ES_CF06" sourceRef="S_ES_StopAttempt" targetRef="S_ES_SendOutcome"/>
+      <bpmn:sequenceFlow id="S_ES_CF07" sourceRef="S_ES_SendOutcome" targetRef="S_ES_End"/>
+    </bpmn:subProcess>
+
+    <bpmn:sequenceFlow id="S_F01" sourceRef="S_StartBrowse" targetRef="S_QueryCatalogue"/>
+    <bpmn:sequenceFlow id="S_F02" sourceRef="S_QueryCatalogue" targetRef="S_SendBrowse"/>
+    <bpmn:sequenceFlow id="S_F03" sourceRef="S_SendBrowse" targetRef="S_CatchHold"/>
+    <bpmn:sequenceFlow id="S_F04" sourceRef="S_CatchHold" targetRef="S_ValidateHold"/>
+    <bpmn:sequenceFlow id="S_F05" sourceRef="S_ValidateHold" targetRef="S_AtomicHold"/>
+    <bpmn:sequenceFlow id="S_F06" sourceRef="S_AtomicHold" targetRef="S_GW_Hold"/>
+    <bpmn:sequenceFlow id="S_F07" sourceRef="S_GW_Hold" targetRef="S_CreateSnapshot"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">holdCommitted = true</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_F09" sourceRef="S_GW_Hold" targetRef="S_SendConflict"/>
+    <bpmn:sequenceFlow id="S_F10" sourceRef="S_SendConflict" targetRef="S_EndConflict"/>
+    <bpmn:sequenceFlow id="S_F11" sourceRef="S_CreateSnapshot" targetRef="S_SendHeld"/>
+    <bpmn:sequenceFlow id="S_F12" sourceRef="S_SendHeld" targetRef="S_GW_WaitCheckout"/>
+    <bpmn:sequenceFlow id="S_F13" sourceRef="S_GW_WaitCheckout" targetRef="S_CatchCheckout"/>
+    <bpmn:sequenceFlow id="S_F14" sourceRef="S_GW_WaitCheckout" targetRef="S_TimerHoldBeforeCheckout"/>
+    <bpmn:sequenceFlow id="S_F15" sourceRef="S_TimerHoldBeforeCheckout" targetRef="S_ExpireBeforeCheckout"/>
+    <bpmn:sequenceFlow id="S_F16" sourceRef="S_ExpireBeforeCheckout" targetRef="S_SendRejected"/>
+    <bpmn:sequenceFlow id="S_F17" sourceRef="S_CatchCheckout" targetRef="S_ValidateCheckout"/>
+    <bpmn:sequenceFlow id="S_F18" sourceRef="S_ValidateCheckout" targetRef="S_GW_Checkout"/>
+    <bpmn:sequenceFlow id="S_F19" sourceRef="S_GW_Checkout" targetRef="S_CreateAttempt"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">checkoutValid = true</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_F20" sourceRef="S_GW_Checkout" targetRef="S_SendRejected"/>
+    <bpmn:sequenceFlow id="S_F21" sourceRef="S_SendRejected" targetRef="S_EndRejected"/>
+    <bpmn:sequenceFlow id="S_F22" sourceRef="S_CreateAttempt" targetRef="S_SendPayment"/>
+    <bpmn:sequenceFlow id="S_F23" sourceRef="S_SendPayment" targetRef="S_SendPending"/>
+    <bpmn:sequenceFlow id="S_F24" sourceRef="S_SendPending" targetRef="S_GW_WaitPayment"/>
+    <bpmn:sequenceFlow id="S_F25" sourceRef="S_GW_WaitPayment" targetRef="S_CatchCallback"/>
+    <bpmn:sequenceFlow id="S_F26" sourceRef="S_GW_WaitPayment" targetRef="S_TimerPayment"/>
+    <bpmn:sequenceFlow id="S_F27" sourceRef="S_GW_WaitPayment" targetRef="S_TimerHold"/>
+    <bpmn:sequenceFlow id="S_F28" sourceRef="S_CatchCallback" targetRef="S_ValidateCallback"/>
+    <bpmn:sequenceFlow id="S_F29" sourceRef="S_ValidateCallback" targetRef="S_GW_Callback"/>
+    <bpmn:sequenceFlow id="S_F30" sourceRef="S_GW_Callback" targetRef="S_AtomicConfirm"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">effectiveStatus = 'success'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_F31" sourceRef="S_GW_Callback" targetRef="S_RecordFailure"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">effectiveStatus = 'failure'</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_F35" sourceRef="S_GW_Callback" targetRef="S_RecordLate"/>
+    <bpmn:sequenceFlow id="S_F36" sourceRef="S_AtomicConfirm" targetRef="S_GW_Confirmed"/>
+    <bpmn:sequenceFlow id="S_F37" sourceRef="S_GW_Confirmed" targetRef="S_CreateReferenceQR"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">confirmationCommitted = true</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_F38" sourceRef="S_GW_Confirmed" targetRef="S_RecordLate"/>
+    <bpmn:sequenceFlow id="S_F39" sourceRef="S_CreateReferenceQR" targetRef="S_SendOutcome"/>
+    <bpmn:sequenceFlow id="S_F40" sourceRef="S_SendOutcome" targetRef="S_EndConfirmed"/>
+    <bpmn:sequenceFlow id="S_F41" sourceRef="S_RecordFailure" targetRef="S_SendOutcome"/>
+    <bpmn:sequenceFlow id="S_F42" sourceRef="S_RecordTimeout" targetRef="S_SendOutcome"/>
+    <bpmn:sequenceFlow id="S_F43" sourceRef="S_TimerPayment" targetRef="S_RecordTimeout"/>
+    <bpmn:sequenceFlow id="S_F44" sourceRef="S_TimerHold" targetRef="S_RecordTimeout"/>
+    <bpmn:sequenceFlow id="S_F45" sourceRef="S_RecordLate" targetRef="S_SendOutcome"/>
+  </bpmn:process>
+
+  <bpmn:process id="Process_SimulatedPayment" name="Simulated Payment Provider" isExecutable="false">
+    <bpmn:startEvent id="P_Start" name="Payment initiation received"><bpmn:messageEventDefinition messageRef="Message_PaymentInitiation"/></bpmn:startEvent>
+    <bpmn:serviceTask id="P_RecordAttempt" name="Record or recover simulated attempt"/>
+    <bpmn:sendTask id="P_SendAck" name="Send non-final acknowledgement" messageRef="Message_PaymentAck"/>
+    <bpmn:businessRuleTask id="P_DetermineOutcome" name="Determine configured scenario"/>
+    <bpmn:inclusiveGateway id="P_GW_Scenario" name="Select delivery behaviour"/>
+    <bpmn:intermediateCatchEvent id="P_Delay" name="Configured callback delay"><bpmn:timerEventDefinition><bpmn:timeDuration xsi:type="bpmn:tFormalExpression">${CALLBACK_DELAY}</bpmn:timeDuration></bpmn:timerEventDefinition></bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="P_SendCallback" name="Send callback" messageRef="Message_PaymentCallback"/>
+    <bpmn:sendTask id="P_SendDuplicate" name="Send duplicate callback" messageRef="Message_PaymentCallback"/>
+    <bpmn:sendTask id="P_SendContradictory" name="Send contradictory or out-of-order callback" messageRef="Message_PaymentCallback"/>
+    <bpmn:task id="P_NoCallback" name="Simulate no callback"/>
+    <bpmn:endEvent id="P_End" name="Scenario complete"/>
+    <bpmn:sequenceFlow id="P_F01" sourceRef="P_Start" targetRef="P_RecordAttempt"/>
+    <bpmn:sequenceFlow id="P_F02" sourceRef="P_RecordAttempt" targetRef="P_SendAck"/>
+    <bpmn:sequenceFlow id="P_F03" sourceRef="P_SendAck" targetRef="P_DetermineOutcome"/>
+    <bpmn:sequenceFlow id="P_F04" sourceRef="P_DetermineOutcome" targetRef="P_GW_Scenario"/>
+    <bpmn:sequenceFlow id="P_F05" sourceRef="P_GW_Scenario" targetRef="P_Delay"/>
+    <bpmn:sequenceFlow id="P_F06" sourceRef="P_Delay" targetRef="P_SendCallback"/>
+    <bpmn:sequenceFlow id="P_F07" sourceRef="P_GW_Scenario" targetRef="P_SendDuplicate"/>
+    <bpmn:sequenceFlow id="P_F08" sourceRef="P_GW_Scenario" targetRef="P_SendContradictory"/>
+    <bpmn:sequenceFlow id="P_F09" sourceRef="P_GW_Scenario" targetRef="P_NoCallback"/>
+    <bpmn:sequenceFlow id="P_F10" sourceRef="P_SendCallback" targetRef="P_End"/>
+    <bpmn:sequenceFlow id="P_F11" sourceRef="P_SendDuplicate" targetRef="P_End"/>
+    <bpmn:sequenceFlow id="P_F12" sourceRef="P_SendContradictory" targetRef="P_End"/>
+    <bpmn:sequenceFlow id="P_F13" sourceRef="P_NoCallback" targetRef="P_End"/>
+  </bpmn:process>
+
+  <bpmn:process id="Process_AdminCancellation" name="Cinema Operator Showtime Cancellation" isExecutable="false">
+    <bpmn:startEvent id="A_Start" name="Need to cancel showtime"/>
+    <bpmn:userTask id="A_Authorize" name="Authorize and review impact"/>
+    <bpmn:sendTask id="A_CancelShowtime" name="Submit authoritative cancellation" messageRef="Message_ShowtimeCancelled"/>
+    <bpmn:endEvent id="A_End" name="Cancellation command submitted"/>
+    <bpmn:sequenceFlow id="A_F01" sourceRef="A_Start" targetRef="A_Authorize"/>
+    <bpmn:sequenceFlow id="A_F02" sourceRef="A_Authorize" targetRef="A_CancelShowtime"/>
+    <bpmn:sequenceFlow id="A_F03" sourceRef="A_CancelShowtime" targetRef="A_End"/>
+  </bpmn:process>
+
+  <bpmn:collaboration id="Collaboration_SeatlyBooking" name="Seatly End-to-End Customer Booking">
+    <bpmn:participant id="Participant_Customer" name="Customer" processRef="Process_Customer"/>
+    <bpmn:participant id="Participant_Seatly" name="Seatly" processRef="Process_SeatlyBooking"/>
+    <bpmn:participant id="Participant_Payment" name="Simulated Payment Provider" processRef="Process_SimulatedPayment"/>
+    <bpmn:participant id="Participant_Admin" name="Cinema Operator/Admin" processRef="Process_AdminCancellation"/>
+
+    <bpmn:messageFlow id="MF-01" sourceRef="C_Browse" targetRef="S_StartBrowse" messageRef="Message_BrowseRequest"/>
+    <bpmn:messageFlow id="MF-02" sourceRef="S_SendBrowse" targetRef="C_ReceiveBrowse" messageRef="Message_BrowseResults"/>
+    <bpmn:messageFlow id="MF-03" sourceRef="C_SendHold" targetRef="S_CatchHold" messageRef="Message_HoldRequest"/>
+    <bpmn:messageFlow id="MF-04" sourceRef="S_SendHeld" targetRef="C_ReceiveHold" messageRef="Message_HoldOutcome"/>
+    <bpmn:messageFlow id="MF-05" sourceRef="S_SendConflict" targetRef="C_ReceiveHold" messageRef="Message_HoldOutcome"/>
+    <bpmn:messageFlow id="MF-06" sourceRef="C_SendCheckout" targetRef="S_CatchCheckout" messageRef="Message_CheckoutRequest"/>
+    <bpmn:messageFlow id="MF-07" sourceRef="S_SendPending" targetRef="C_ReceivePending" messageRef="Message_CheckoutPending"/>
+    <bpmn:messageFlow id="MF-08" sourceRef="S_SendPayment" targetRef="P_Start" messageRef="Message_PaymentInitiation"/>
+    <bpmn:messageFlow id="MF-09" sourceRef="P_SendCallback" targetRef="S_CatchCallback" messageRef="Message_PaymentCallback"/>
+    <bpmn:messageFlow id="MF-10" sourceRef="P_SendDuplicate" targetRef="S_CatchCallback" messageRef="Message_PaymentCallback"/>
+    <bpmn:messageFlow id="MF-11" sourceRef="P_SendContradictory" targetRef="S_CatchCallback" messageRef="Message_PaymentCallback"/>
+    <bpmn:messageFlow id="MF-12" sourceRef="S_SendOutcome" targetRef="C_CatchOutcome" messageRef="Message_BookingOutcome"/>
+    <bpmn:messageFlow id="MF-13" sourceRef="C_SendStatus" targetRef="S_ES_StatusStart" messageRef="Message_StatusRequest"/>
+    <bpmn:messageFlow id="MF-14" sourceRef="S_ES_SendStatus" targetRef="C_ReceiveStatus" messageRef="Message_StatusResult"/>
+    <bpmn:messageFlow id="MF-15" sourceRef="A_CancelShowtime" targetRef="S_ES_CancelStart" messageRef="Message_ShowtimeCancelled"/>
+  </bpmn:collaboration>
+</bpmn:definitions>

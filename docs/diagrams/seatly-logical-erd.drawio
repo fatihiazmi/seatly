@@ -1,0 +1,657 @@
+<mxfile host="app.diagrams.net" agent="claude-code" version="24.7.17">
+  <diagram name="Seatly Logical ERD" id="erd">
+    <mxGraphModel dx="2200" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2720" pageHeight="3050" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="t" value="Seatly — Logical ERD  (LOGICAL_ERD.md v1.1)" style="text;html=1;fontSize=26;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="80" y="40" width="1600" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="st" value="PostgreSQL authoritative · timestamptz in UTC · MYR integer sen · reconciled 2026-08-10 (RC-02 … RC-08)" style="text;html=1;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="2400" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users" value="users" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#dae8fc;strokeColor=#6c8ebf;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="80" y="140" width="340" height="186" as="geometry" />
+        </mxCell>
+        <mxCell id="users_c0" value="PK  id : bigint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="users">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users_c1" value="UQ  public_id : uuid" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="users">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users_c2" value="UQ  lower(email)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="users">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users_c3" value="    status : ACTIVE|DISABLED|ANONYMISED" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="users">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users_c4" value="    last_active_at : timestamptz" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="users">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="role_user" value="role_user" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#dae8fc;strokeColor=#6c8ebf;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="780" y="140" width="340" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="role_user_c0" value="PK/FK  user_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="role_user">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="role_user_c1" value="PK/FK  role_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="role_user">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="roles" value="roles" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#dae8fc;strokeColor=#6c8ebf;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="140" width="340" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="roles_c0" value="PK  id : smallint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="roles">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="roles_c1" value="UQ  code : CUSTOMER|OPERATOR|ADMIN" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="roles">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="roles_c2" value="    name" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="roles">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="idempotency_keys" value="idempotency_keys" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#f8cecc;strokeColor=#b85450;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="2180" y="140" width="340" height="216" as="geometry" />
+        </mxCell>
+        <mxCell id="idempotency_keys_c0" value="PK  id : bigint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="idempotency_keys">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="idempotency_keys_c1" value="UQ  scope + principal + key_hash" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="idempotency_keys">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="idempotency_keys_c2" value="    request_fingerprint : char(64)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="idempotency_keys">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="idempotency_keys_c3" value="    status : IN_PROGRESS|COMPLETED|FAILED" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="idempotency_keys">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="idempotency_keys_c4" value="    result_type / result_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="idempotency_keys">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="idempotency_keys_c5" value="    expires_at  (30-day retention)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="idempotency_keys">
+          <mxGeometry y="186" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="venues" value="venues" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#d5e8d4;strokeColor=#82b366;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="80" y="640" width="340" height="156" as="geometry" />
+        </mxCell>
+        <mxCell id="venues_c0" value="PK  id : bigint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="venues">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="venues_c1" value="UQ  public_id : uuid" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="venues">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="venues_c2" value="    timezone : Asia/Kuala_Lumpur" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="venues">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="venues_c3" value="    is_active : boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="venues">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="halls" value="halls" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#d5e8d4;strokeColor=#82b366;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="780" y="640" width="340" height="186" as="geometry" />
+        </mxCell>
+        <mxCell id="halls_c0" value="PK  id : bigint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="halls">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="halls_c1" value="FK  venue_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="halls">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="halls_c2" value="UQ  (venue_id, code)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="halls">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="halls_c3" value="    layout_version : integer" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="halls">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="halls_c4" value="    is_active : boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="halls">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="seats" value="seats" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#d5e8d4;strokeColor=#82b366;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="640" width="340" height="216" as="geometry" />
+        </mxCell>
+        <mxCell id="seats_c0" value="PK  id : bigint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="seats">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="seats_c1" value="FK  hall_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="seats">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="seats_c2" value="UQ  (hall_id, row_label, seat_number)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="seats">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="seats_c3" value="UQ  (hall_id, sort_order)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="seats">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="seats_c4" value="    seat_type : STANDARD|ACCESSIBLE|COMPANION" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="seats">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="seats_c5" value="    is_active : boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="seats">
+          <mxGeometry y="186" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="seat_companion_links" value="seat_companion_links" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#d5e8d4;strokeColor=#82b366;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="2180" y="640" width="340" height="156" as="geometry" />
+        </mxCell>
+        <mxCell id="seat_companion_links_c0" value="PK/FK  accessible_seat_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="seat_companion_links">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="seat_companion_links_c1" value="UQ/FK  companion_seat_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="seat_companion_links">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="seat_companion_links_c2" value="CK     accessible &lt;&gt; companion" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="seat_companion_links">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="seat_companion_links_c3" value="TRG    same hall, types, active, adjacent" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="seat_companion_links">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="movies" value="movies" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#d5e8d4;strokeColor=#82b366;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1140" width="340" height="186" as="geometry" />
+        </mxCell>
+        <mxCell id="movies_c0" value="PK  id : bigint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="movies">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="movies_c1" value="UQ  public_id : uuid" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="movies">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="movies_c2" value="    title" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="movies">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="movies_c3" value="    runtime_minutes : smallint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="movies">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="movies_c4" value="    is_active : boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="movies">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtimes" value="showtimes" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#fff2cc;strokeColor=#d6b656;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="780" y="1140" width="340" height="276" as="geometry" />
+        </mxCell>
+        <mxCell id="showtimes_c0" value="PK  id : bigint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="showtimes">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtimes_c1" value="FK  movie_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="showtimes">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtimes_c2" value="FK  hall_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="showtimes">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtimes_c3" value="    status : DRAFT|PUBLISHED|CANCELLED" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="showtimes">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtimes_c4" value="    starts_at / ends_at : timestamptz" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="showtimes">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtimes_c5" value="    price_minor : bigint / currency" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="showtimes">
+          <mxGeometry y="186" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtimes_c6" value="EXCL  no overlap per hall (PUBLISHED)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="showtimes">
+          <mxGeometry y="216" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtimes_c7" value="    version : integer" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="showtimes">
+          <mxGeometry y="246" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtime_seats" value="showtime_seats" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#fff2cc;strokeColor=#d6b656;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="1140" width="340" height="276" as="geometry" />
+        </mxCell>
+        <mxCell id="showtime_seats_c0" value="PK  (showtime_id, seat_id)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="showtime_seats">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtime_seats_c1" value="    status : AVAILABLE|HELD|CONFIRMED|BLOCKED" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="showtime_seats">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtime_seats_c2" value="FK  hold_id     — current owner only" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="showtime_seats">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtime_seats_c3" value="FK  booking_id  — current owner only" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="showtime_seats">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtime_seats_c4" value="    hold_expires_at : timestamptz" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="showtime_seats">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtime_seats_c5" value="    price_minor / currency" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="showtime_seats">
+          <mxGeometry y="186" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtime_seats_c6" value="    blocked_reason_code" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="showtime_seats">
+          <mxGeometry y="216" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="showtime_seats_c7" value="    version : integer" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="showtime_seats">
+          <mxGeometry y="246" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="outbox_events" value="outbox_events" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#f8cecc;strokeColor=#b85450;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="2180" y="1140" width="340" height="246" as="geometry" />
+        </mxCell>
+        <mxCell id="outbox_events_c0" value="PK  id : uuid" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="outbox_events">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="outbox_events_c1" value="UQ  event_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="outbox_events">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="outbox_events_c2" value="    aggregate_type / id / version" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="outbox_events">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="outbox_events_c3" value="    event_type / payload : jsonb" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="outbox_events">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="outbox_events_c4" value="    status : PENDING|DELIVERING|" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="outbox_events">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="outbox_events_c5" value="             DELIVERED|DEAD_LETTER" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="outbox_events">
+          <mxGeometry y="186" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="outbox_events_c6" value="    available_at / attempt_count" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="outbox_events">
+          <mxGeometry y="216" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="holds" value="holds" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#fff2cc;strokeColor=#d6b656;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1640" width="340" height="246" as="geometry" />
+        </mxCell>
+        <mxCell id="holds_c0" value="PK  id : bigint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="holds">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="holds_c1" value="FK  user_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="holds">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="holds_c2" value="FK  showtime_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="holds">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="holds_c3" value="    status : ACTIVE|CONFIRMED|EXPIRED|RELEASED" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="holds">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="holds_c4" value="CK  seat_count between 1 and 8" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="holds">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="holds_c5" value="CK  expires_at = created_at + 5 min" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="holds">
+          <mxGeometry y="186" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="holds_c6" value="    accessible_acknowledged + version" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="holds">
+          <mxGeometry y="216" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hold_items" value="hold_items" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#fff2cc;strokeColor=#d6b656;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="780" y="1640" width="340" height="216" as="geometry" />
+        </mxCell>
+        <mxCell id="hold_items_c0" value="PK  (hold_id, seat_id)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="hold_items">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hold_items_c1" value="FK  (hold_id, showtime_id)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="hold_items">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hold_items_c2" value="FK  (showtime_id, seat_id)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="hold_items">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hold_items_c3" value="    seat label / row / number snapshot" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="hold_items">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hold_items_c4" value="    seat_type snapshot" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="hold_items">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hold_items_c5" value="    price_minor / currency" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="hold_items">
+          <mxGeometry y="186" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="payments" value="payments" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#e1d5e7;strokeColor=#9673a6;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="1640" width="340" height="246" as="geometry" />
+        </mxCell>
+        <mxCell id="payments_c0" value="PK  id : bigint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="payments">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="payments_c1" value="FK  hold_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="payments">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="payments_c2" value="UQ  (hold_id, attempt_number)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="payments">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="payments_c3" value="UQ  (provider, provider_payment_id)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="payments">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="payments_c4" value="    status : 8 values — see ERD 2.5" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="payments">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="payments_c5" value="    amount_minor / currency" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="payments">
+          <mxGeometry y="186" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="payments_c6" value="    reconciliation_reason_code" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="payments">
+          <mxGeometry y="216" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_callback_events" value="payment_callback_events" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#e1d5e7;strokeColor=#9673a6;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="2180" y="1640" width="340" height="246" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_callback_events_c0" value="PK  id : bigint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="payment_callback_events">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_callback_events_c1" value="UQ  (provider, provider_event_id)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="payment_callback_events">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_callback_events_c2" value="FK  payment_id  (nullable)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="payment_callback_events">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_callback_events_c3" value="    signature_valid / payload_hash" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="payment_callback_events">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_callback_events_c4" value="    disposition : 17 values (RC-07)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="payment_callback_events">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_callback_events_c5" value="    received_at / processed_at" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="payment_callback_events">
+          <mxGeometry y="186" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_callback_events_c6" value="    correlation_id : uuid" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="payment_callback_events">
+          <mxGeometry y="216" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bookings" value="bookings" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#e1d5e7;strokeColor=#9673a6;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="80" y="2140" width="340" height="276" as="geometry" />
+        </mxCell>
+        <mxCell id="bookings_c0" value="PK  id : bigint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="bookings">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bookings_c1" value="UQ  reference" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="bookings">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bookings_c2" value="UQ  hold_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="bookings">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bookings_c3" value="UQ  payment_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="bookings">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bookings_c4" value="FK  user_id / showtime_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="bookings">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bookings_c5" value="    status : CONFIRMED|CUSTOMER_CANCELLED|" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="bookings">
+          <mxGeometry y="186" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bookings_c6" value="             ADMIN_CANCELLED|SHOWTIME_CANCELLED" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="bookings">
+          <mxGeometry y="216" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bookings_c7" value="    immutable snapshots + qr_token_hash" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="bookings">
+          <mxGeometry y="246" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="booking_items" value="booking_items" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#e1d5e7;strokeColor=#9673a6;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="780" y="2140" width="340" height="216" as="geometry" />
+        </mxCell>
+        <mxCell id="booking_items_c0" value="PK  (booking_id, seat_id)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="booking_items">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="booking_items_c1" value="FK  (booking_id, showtime_id)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="booking_items">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="booking_items_c2" value="FK  (showtime_id, seat_id)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="booking_items">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="booking_items_c3" value="    seat label / row / number snapshot" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="booking_items">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="booking_items_c4" value="    seat_type snapshot" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="booking_items">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="booking_items_c5" value="    price_minor / currency" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="booking_items">
+          <mxGeometry y="186" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cancellations" value="cancellations" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#f8cecc;strokeColor=#b85450;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="2140" width="340" height="246" as="geometry" />
+        </mxCell>
+        <mxCell id="cancellations_c0" value="PK  id : bigint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="cancellations">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cancellations_c1" value="    type : CUSTOMER_BOOKING|ADMIN_BOOKING|SHOWTIME" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="cancellations">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cancellations_c2" value="FK  booking_id   (nullable)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="cancellations">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cancellations_c3" value="FK  showtime_id  (nullable)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="cancellations">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cancellations_c4" value="    state : REQUESTED|APPLIED|REJECTED" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="cancellations">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cancellations_c5" value="    reason_code / request_fingerprint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="cancellations">
+          <mxGeometry y="186" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cancellations_c6" value="UQ  one APPLIED per booking, per showtime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="cancellations">
+          <mxGeometry y="216" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="audit_events" value="audit_events" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;html=1;fontSize=14;fillColor=#f8cecc;strokeColor=#b85450;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="2180" y="2140" width="340" height="246" as="geometry" />
+        </mxCell>
+        <mxCell id="audit_events_c0" value="PK  id : bigint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;fontStyle=1;" vertex="1" parent="audit_events">
+          <mxGeometry y="36" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="audit_events_c1" value="UQ  event_id : uuid" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="audit_events">
+          <mxGeometry y="66" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="audit_events_c2" value="    actor_type / actor_user_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="audit_events">
+          <mxGeometry y="96" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="audit_events_c3" value="    action / subject_type / subject_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="audit_events">
+          <mxGeometry y="126" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="audit_events_c4" value="    correlation_id / result / reason_code" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="audit_events">
+          <mxGeometry y="156" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="audit_events_c5" value="    metadata : jsonb, redacted" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="audit_events">
+          <mxGeometry y="186" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="audit_events_c6" value="    append-only, 180-day retention" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;overflow=hidden;html=1;fontSize=12;fontFamily=Courier New;" vertex="1" parent="audit_events">
+          <mxGeometry y="216" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="Reading this diagram
+
+• showtime_seats is the only current seat-allocation authority. hold_id and booking_id name the CURRENT owner: confirmation clears hold_id, blocking clears both (RC-02).
+• History is never read from a live pointer — hold_items, booking_items, bookings.hold_id and audit_events preserve it.
+• Every requested seat locks in seat_id order behind the showtime lock; a hold is all-or-none.
+• payment_callback_events deduplicates on (provider, provider_event_id); a callback is recorded even when it cannot change the payment.
+• cancellations covers customer, admin and showtime cancellation in one idempotent decision record (RC-06).
+• Not drawn, to keep the graph legible: users ← cancellations.requested_by_user_id and users ← audit_events.actor_user_id, both ON DELETE SET NULL.
+• Laravel jobs / failed_jobs are infrastructure tables and are out of the logical model." style="text;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;dashed=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="2620" width="2440" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="erde0" value="granted to" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.4167;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0;entryY=0.5376;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="role_user" target="users">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="180" />
+              <mxPoint x="460" y="180" />
+              <mxPoint x="460" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde1" value="grants" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.4167;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.4762;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="role_user" target="roles">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="1160" y="180" />
+              <mxPoint x="1440" y="180" />
+              <mxPoint x="1440" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde2" value="in" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.5376;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0;entryY=0.5128;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="halls" target="venues">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="740" />
+              <mxPoint x="460" y="740" />
+              <mxPoint x="460" y="720" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde3" value="in" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.463;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0;entryY=0.5376;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="seats" target="halls">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="1440" y="740" />
+              <mxPoint x="1160" y="740" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde4" value="accessible side" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.3846;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0;entryY=0.3704;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERzeroToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="seat_companion_links" target="seats">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="2140" y="700" />
+              <mxPoint x="1860" y="700" />
+              <mxPoint x="1860" y="720" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde5" value="shows" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.3623;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0;entryY=0.5376;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="showtimes" target="movies">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="1240" />
+              <mxPoint x="460" y="1240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde6" value="runs in" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.5294;exitY=0.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5294;entryY=1.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="showtimes" target="halls">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="960" y="1100" />
+              <mxPoint x="960" y="860" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde7" value="materialised for" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.3623;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0;entryY=0.5072;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="showtime_seats" target="showtimes">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="1440" y="1240" />
+              <mxPoint x="1160" y="1240" />
+              <mxPoint x="1160" y="1280" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde8" value="is seat" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.4706;exitY=0.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.4706;entryY=1.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="showtime_seats" target="seats">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="1640" y="1100" />
+              <mxPoint x="1640" y="900" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde9" value="held by" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.4706;exitY=0.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.4706;entryY=1.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="holds" target="users">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="240" y="1600" />
+              <mxPoint x="240" y="1360" />
+              <mxPoint x="440" y="1360" />
+              <mxPoint x="440" y="360" />
+              <mxPoint x="240" y="360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde10" value="for" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.2439;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.6522;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="holds" target="showtimes">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="460" y="1700" />
+              <mxPoint x="740" y="1700" />
+              <mxPoint x="740" y="1320" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde11" value="line of" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.463;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0;entryY=0.4878;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="hold_items" target="holds">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="1740" />
+              <mxPoint x="460" y="1740" />
+              <mxPoint x="460" y="1760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde12" value="snapshot of" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.463;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.6522;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="hold_items" target="showtime_seats">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="1160" y="1740" />
+              <mxPoint x="1440" y="1740" />
+              <mxPoint x="1440" y="1320" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde13" value="pays for" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.3252;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0;entryY=0.7317;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="payments" target="holds">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="1440" y="1720" />
+              <mxPoint x="1140" y="1720" />
+              <mxPoint x="1140" y="1880" />
+              <mxPoint x="460" y="1880" />
+              <mxPoint x="460" y="1820" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde14" value="inbox for" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.4878;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0;entryY=0.4878;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERzeroToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="payment_callback_events" target="payments">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="2140" y="1760" />
+              <mxPoint x="1860" y="1760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde15" value="one per hold" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.3529;exitY=0.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.4706;entryY=1.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERzeroToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="bookings" target="holds">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="2100" />
+              <mxPoint x="200" y="1920" />
+              <mxPoint x="240" y="1920" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde16" value="one per payment" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.2174;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.6504;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERzeroToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="bookings" target="payments">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="460" y="2200" />
+              <mxPoint x="740" y="2200" />
+              <mxPoint x="740" y="1900" />
+              <mxPoint x="1440" y="1900" />
+              <mxPoint x="1440" y="1800" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde17" value="for" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.6471;exitY=0.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.3529;entryY=1.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="bookings" target="showtimes">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="2100" />
+              <mxPoint x="300" y="1920" />
+              <mxPoint x="440" y="1920" />
+              <mxPoint x="440" y="1460" />
+              <mxPoint x="900" y="1460" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde18" value="line of" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.463;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0;entryY=0.5072;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="booking_items" target="bookings">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="2240" />
+              <mxPoint x="460" y="2240" />
+              <mxPoint x="460" y="2280" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde19" value="snapshot of" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.5294;exitY=0.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.4706;entryY=1.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERoneToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="booking_items" target="showtime_seats">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="960" y="2100" />
+              <mxPoint x="960" y="1920" />
+              <mxPoint x="1840" y="1920" />
+              <mxPoint x="1840" y="1460" />
+              <mxPoint x="1640" y="1460" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde20" value="targets booking" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.4878;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0;entryY=0.7246;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERzeroToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="cancellations" target="bookings">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="1440" y="2260" />
+              <mxPoint x="1140" y="2260" />
+              <mxPoint x="1140" y="2380" />
+              <mxPoint x="460" y="2380" />
+              <mxPoint x="460" y="2340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde21" value="targets showtime" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.4706;exitY=0.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.6471;entryY=1.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERzeroToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="cancellations" target="showtimes">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="1640" y="2100" />
+              <mxPoint x="1640" y="1940" />
+              <mxPoint x="1160" y="1940" />
+              <mxPoint x="1160" y="1460" />
+              <mxPoint x="1000" y="1460" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="erde22" value="companion side" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.641;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0;entryY=0.6481;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=ERzeroToMany;startFill=0;endArrow=ERmandOne;endFill=0;strokeColor=#82b366;strokeWidth=1.5;fontSize=12;fontColor=#82b366;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="seat_companion_links" target="seats">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="2140" y="740" />
+              <mxPoint x="1860" y="740" />
+              <mxPoint x="1860" y="780" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
