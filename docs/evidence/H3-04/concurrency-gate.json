@@ -1,0 +1,797 @@
+{
+    "generated_at": "2026-08-10T09:22:39+00:00",
+    "environment": {
+        "postgres_version": "16.14 (Debian 16.14-1.pgdg13+1)",
+        "php_version": "8.5.3",
+        "laravel_version": "13.24.0",
+        "build": "f446a56",
+        "schema_checksum": "d6fc46f85a31fbe87e84344f072fddd5",
+        "max_connections": "200"
+    },
+    "parameters": {
+        "attempts": 100,
+        "runs": 3,
+        "seed": 20260810,
+        "scenarios": [
+            "same-seat",
+            "overlapping"
+        ]
+    },
+    "runs": [
+        {
+            "scenario": "same-seat",
+            "run": 1,
+            "seed": 20260811,
+            "attempts": 100,
+            "showtime_id": "39cb119f-2a88-4e11-96d5-32704e06a47d",
+            "deadlocks_detected": 0,
+            "coordination_window_ms": 57.136,
+            "outcomes": {
+                "held": 1,
+                "conflict": 99,
+                "error": 0,
+                "reasons": {
+                    "SEAT_TAKEN": 99
+                },
+                "errors": []
+            },
+            "latency_ms": {
+                "min": 117.592,
+                "p95": 1572.485,
+                "max": 1637.457
+            },
+            "invariants": [
+                {
+                    "name": "duplicate_active_seat_ownership",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "partial_hold_ownership",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_coverage_mismatch",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "inventory_hold_pointer_dangling",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_expiry_mismatch",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_totals_disagree",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "orphan_companion_hold",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "undeclared_accessible_hold",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "inventory_linkage_invalid",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_expiry_not_five_minutes",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "duplicate_confirmed_seat_ownership",
+                    "violations": 0,
+                    "deferred": true,
+                    "sample": []
+                }
+            ],
+            "expectations": [
+                {
+                    "claim": "exactly one attempt acquired a hold",
+                    "met": true,
+                    "detail": "1 of 100"
+                },
+                {
+                    "claim": "every other attempt received a deterministic conflict",
+                    "met": true,
+                    "detail": "99 conflicts: {\"SEAT_TAKEN\":99}"
+                },
+                {
+                    "claim": "no attempt failed with an unhandled error",
+                    "met": true,
+                    "detail": "none"
+                },
+                {
+                    "claim": "every attempt produced a result",
+                    "met": true,
+                    "detail": "100 of 100"
+                },
+                {
+                    "claim": "the winner holds its whole set and no loser retained a seat",
+                    "met": true,
+                    "detail": "1 seats HELD, expected 1"
+                },
+                {
+                    "claim": "all attempts were released inside one second",
+                    "met": true,
+                    "detail": "57.136 ms between first and last start"
+                },
+                {
+                    "claim": "the invariant SQL found nothing",
+                    "met": true,
+                    "detail": "clean"
+                }
+            ],
+            "passed": true
+        },
+        {
+            "scenario": "same-seat",
+            "run": 2,
+            "seed": 20260812,
+            "attempts": 100,
+            "showtime_id": "72230dc6-c5be-4321-9636-214a6b193db4",
+            "deadlocks_detected": 0,
+            "coordination_window_ms": 53.402,
+            "outcomes": {
+                "held": 1,
+                "conflict": 99,
+                "error": 0,
+                "reasons": {
+                    "SEAT_TAKEN": 99
+                },
+                "errors": []
+            },
+            "latency_ms": {
+                "min": 117.548,
+                "p95": 1653.803,
+                "max": 1754.266
+            },
+            "invariants": [
+                {
+                    "name": "duplicate_active_seat_ownership",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "partial_hold_ownership",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_coverage_mismatch",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "inventory_hold_pointer_dangling",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_expiry_mismatch",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_totals_disagree",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "orphan_companion_hold",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "undeclared_accessible_hold",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "inventory_linkage_invalid",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_expiry_not_five_minutes",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "duplicate_confirmed_seat_ownership",
+                    "violations": 0,
+                    "deferred": true,
+                    "sample": []
+                }
+            ],
+            "expectations": [
+                {
+                    "claim": "exactly one attempt acquired a hold",
+                    "met": true,
+                    "detail": "1 of 100"
+                },
+                {
+                    "claim": "every other attempt received a deterministic conflict",
+                    "met": true,
+                    "detail": "99 conflicts: {\"SEAT_TAKEN\":99}"
+                },
+                {
+                    "claim": "no attempt failed with an unhandled error",
+                    "met": true,
+                    "detail": "none"
+                },
+                {
+                    "claim": "every attempt produced a result",
+                    "met": true,
+                    "detail": "100 of 100"
+                },
+                {
+                    "claim": "the winner holds its whole set and no loser retained a seat",
+                    "met": true,
+                    "detail": "1 seats HELD, expected 1"
+                },
+                {
+                    "claim": "all attempts were released inside one second",
+                    "met": true,
+                    "detail": "53.402 ms between first and last start"
+                },
+                {
+                    "claim": "the invariant SQL found nothing",
+                    "met": true,
+                    "detail": "clean"
+                }
+            ],
+            "passed": true
+        },
+        {
+            "scenario": "same-seat",
+            "run": 3,
+            "seed": 20260813,
+            "attempts": 100,
+            "showtime_id": "81762873-0e4d-44a8-9dc1-831dcd7f3c58",
+            "deadlocks_detected": 0,
+            "coordination_window_ms": 67.192,
+            "outcomes": {
+                "held": 1,
+                "conflict": 99,
+                "error": 0,
+                "reasons": {
+                    "SEAT_TAKEN": 99
+                },
+                "errors": []
+            },
+            "latency_ms": {
+                "min": 128.881,
+                "p95": 1646.896,
+                "max": 1720.233
+            },
+            "invariants": [
+                {
+                    "name": "duplicate_active_seat_ownership",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "partial_hold_ownership",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_coverage_mismatch",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "inventory_hold_pointer_dangling",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_expiry_mismatch",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_totals_disagree",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "orphan_companion_hold",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "undeclared_accessible_hold",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "inventory_linkage_invalid",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_expiry_not_five_minutes",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "duplicate_confirmed_seat_ownership",
+                    "violations": 0,
+                    "deferred": true,
+                    "sample": []
+                }
+            ],
+            "expectations": [
+                {
+                    "claim": "exactly one attempt acquired a hold",
+                    "met": true,
+                    "detail": "1 of 100"
+                },
+                {
+                    "claim": "every other attempt received a deterministic conflict",
+                    "met": true,
+                    "detail": "99 conflicts: {\"SEAT_TAKEN\":99}"
+                },
+                {
+                    "claim": "no attempt failed with an unhandled error",
+                    "met": true,
+                    "detail": "none"
+                },
+                {
+                    "claim": "every attempt produced a result",
+                    "met": true,
+                    "detail": "100 of 100"
+                },
+                {
+                    "claim": "the winner holds its whole set and no loser retained a seat",
+                    "met": true,
+                    "detail": "1 seats HELD, expected 1"
+                },
+                {
+                    "claim": "all attempts were released inside one second",
+                    "met": true,
+                    "detail": "67.192 ms between first and last start"
+                },
+                {
+                    "claim": "the invariant SQL found nothing",
+                    "met": true,
+                    "detail": "clean"
+                }
+            ],
+            "passed": true
+        },
+        {
+            "scenario": "overlapping",
+            "run": 1,
+            "seed": 20260811,
+            "attempts": 100,
+            "showtime_id": "c8ac01b6-ca03-4ac2-b9a5-01c7415eddc7",
+            "deadlocks_detected": 0,
+            "coordination_window_ms": 60.463,
+            "outcomes": {
+                "held": 1,
+                "conflict": 99,
+                "error": 0,
+                "reasons": {
+                    "SEAT_TAKEN": 99
+                },
+                "errors": []
+            },
+            "latency_ms": {
+                "min": 118.184,
+                "p95": 1761.479,
+                "max": 1850.939
+            },
+            "invariants": [
+                {
+                    "name": "duplicate_active_seat_ownership",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "partial_hold_ownership",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_coverage_mismatch",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "inventory_hold_pointer_dangling",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_expiry_mismatch",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_totals_disagree",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "orphan_companion_hold",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "undeclared_accessible_hold",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "inventory_linkage_invalid",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_expiry_not_five_minutes",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "duplicate_confirmed_seat_ownership",
+                    "violations": 0,
+                    "deferred": true,
+                    "sample": []
+                }
+            ],
+            "expectations": [
+                {
+                    "claim": "exactly one attempt acquired a hold",
+                    "met": true,
+                    "detail": "1 of 100"
+                },
+                {
+                    "claim": "every other attempt received a deterministic conflict",
+                    "met": true,
+                    "detail": "99 conflicts: {\"SEAT_TAKEN\":99}"
+                },
+                {
+                    "claim": "no attempt failed with an unhandled error",
+                    "met": true,
+                    "detail": "none"
+                },
+                {
+                    "claim": "every attempt produced a result",
+                    "met": true,
+                    "detail": "100 of 100"
+                },
+                {
+                    "claim": "the winner holds its whole set and no loser retained a seat",
+                    "met": true,
+                    "detail": "2 seats HELD, expected 2"
+                },
+                {
+                    "claim": "all attempts were released inside one second",
+                    "met": true,
+                    "detail": "60.463 ms between first and last start"
+                },
+                {
+                    "claim": "the invariant SQL found nothing",
+                    "met": true,
+                    "detail": "clean"
+                }
+            ],
+            "passed": true
+        },
+        {
+            "scenario": "overlapping",
+            "run": 2,
+            "seed": 20260812,
+            "attempts": 100,
+            "showtime_id": "fb38f73b-154c-499e-9767-92472934952b",
+            "deadlocks_detected": 0,
+            "coordination_window_ms": 41.821,
+            "outcomes": {
+                "held": 1,
+                "conflict": 99,
+                "error": 0,
+                "reasons": {
+                    "SEAT_TAKEN": 99
+                },
+                "errors": []
+            },
+            "latency_ms": {
+                "min": 123.379,
+                "p95": 1811.464,
+                "max": 1916.481
+            },
+            "invariants": [
+                {
+                    "name": "duplicate_active_seat_ownership",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "partial_hold_ownership",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_coverage_mismatch",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "inventory_hold_pointer_dangling",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_expiry_mismatch",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_totals_disagree",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "orphan_companion_hold",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "undeclared_accessible_hold",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "inventory_linkage_invalid",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_expiry_not_five_minutes",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "duplicate_confirmed_seat_ownership",
+                    "violations": 0,
+                    "deferred": true,
+                    "sample": []
+                }
+            ],
+            "expectations": [
+                {
+                    "claim": "exactly one attempt acquired a hold",
+                    "met": true,
+                    "detail": "1 of 100"
+                },
+                {
+                    "claim": "every other attempt received a deterministic conflict",
+                    "met": true,
+                    "detail": "99 conflicts: {\"SEAT_TAKEN\":99}"
+                },
+                {
+                    "claim": "no attempt failed with an unhandled error",
+                    "met": true,
+                    "detail": "none"
+                },
+                {
+                    "claim": "every attempt produced a result",
+                    "met": true,
+                    "detail": "100 of 100"
+                },
+                {
+                    "claim": "the winner holds its whole set and no loser retained a seat",
+                    "met": true,
+                    "detail": "2 seats HELD, expected 2"
+                },
+                {
+                    "claim": "all attempts were released inside one second",
+                    "met": true,
+                    "detail": "41.821 ms between first and last start"
+                },
+                {
+                    "claim": "the invariant SQL found nothing",
+                    "met": true,
+                    "detail": "clean"
+                }
+            ],
+            "passed": true
+        },
+        {
+            "scenario": "overlapping",
+            "run": 3,
+            "seed": 20260813,
+            "attempts": 100,
+            "showtime_id": "ab5f33fb-6414-432b-b6ab-9778cc9dea04",
+            "deadlocks_detected": 0,
+            "coordination_window_ms": 60.178,
+            "outcomes": {
+                "held": 1,
+                "conflict": 99,
+                "error": 0,
+                "reasons": {
+                    "SEAT_TAKEN": 99
+                },
+                "errors": []
+            },
+            "latency_ms": {
+                "min": 99.665,
+                "p95": 1832.709,
+                "max": 1958.797
+            },
+            "invariants": [
+                {
+                    "name": "duplicate_active_seat_ownership",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "partial_hold_ownership",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_coverage_mismatch",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "inventory_hold_pointer_dangling",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_expiry_mismatch",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_totals_disagree",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "orphan_companion_hold",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "undeclared_accessible_hold",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "inventory_linkage_invalid",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "hold_expiry_not_five_minutes",
+                    "violations": 0,
+                    "deferred": false,
+                    "sample": []
+                },
+                {
+                    "name": "duplicate_confirmed_seat_ownership",
+                    "violations": 0,
+                    "deferred": true,
+                    "sample": []
+                }
+            ],
+            "expectations": [
+                {
+                    "claim": "exactly one attempt acquired a hold",
+                    "met": true,
+                    "detail": "1 of 100"
+                },
+                {
+                    "claim": "every other attempt received a deterministic conflict",
+                    "met": true,
+                    "detail": "99 conflicts: {\"SEAT_TAKEN\":99}"
+                },
+                {
+                    "claim": "no attempt failed with an unhandled error",
+                    "met": true,
+                    "detail": "none"
+                },
+                {
+                    "claim": "every attempt produced a result",
+                    "met": true,
+                    "detail": "100 of 100"
+                },
+                {
+                    "claim": "the winner holds its whole set and no loser retained a seat",
+                    "met": true,
+                    "detail": "2 seats HELD, expected 2"
+                },
+                {
+                    "claim": "all attempts were released inside one second",
+                    "met": true,
+                    "detail": "60.178 ms between first and last start"
+                },
+                {
+                    "claim": "the invariant SQL found nothing",
+                    "met": true,
+                    "detail": "clean"
+                }
+            ],
+            "passed": true
+        }
+    ],
+    "passed": true
+}

@@ -181,10 +181,19 @@ docker compose down           # stop; add -v to discard the data volume
 | Front-end checks | `npm run lint:check && npm run format:check && npm run types:check` |
 | Full local CI chain | `composer ci:check` |
 
-Not yet implemented — these arrive with Phase 3:
+Phase 3 gate commands, both implemented on 2026-08-10:
 
-- `<CONCURRENCY_COMMAND>` — the same-seat contention harness (`H3-04`).
-- `<INVARIANT_CHECK_COMMAND>` — post-run invariant SQL (`H3-06`).
+| Purpose | Command |
+|---|---|
+| Concurrency gate (`H3-04`/`H3-05`/`H3-07`) | `php artisan seatly:concurrency-gate --attempts=100 --runs=3 --seed=20260810 --output=docs/evidence/H3-04` |
+| Post-run invariant SQL (`H3-06`) | `php artisan seatly:invariants` (add `--json` for machine output) |
+
+Both exit non-zero on failure, so either can be used as a gate rather than a
+report. The concurrency gate forks one process per attempt and refuses to run
+without `ext-pcntl` or against a non-PostgreSQL connection — parallel attempts
+cannot be faked in one process, and nothing but PostgreSQL demonstrates the
+locking being measured. It needs `max_connections >= 200`, which
+`docker-compose.yml` now sets.
 
 Seatly is PostgreSQL-only. `Tests\Integration\IntegrationTestCase` fails loudly
 if the default connection is not `pgsql`, because SQLite would report success

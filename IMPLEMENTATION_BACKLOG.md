@@ -588,6 +588,49 @@ Test before implementation:
 
 **Trace:** FR-001/003/006–010; RULE-003/010–013; PP-01–04/10; AC-002/004.
 
+```text
+Status:              DONE (2026-08-10)
+Requirement IDs:     FR-001/003/006-010; RULE-003/010-013; PP-01-04/10;
+                     AC-002/004
+Gate/P0 IDs:         G3 (prerequisite); P0 invariant 3 (all-or-none)
+Red evidence:        docs/evidence/H3-01/red.md — 18 of 22 cases failed on a
+                     missing route. The four that passed expected 404 or
+                     asserted no side effect, so they passed vacuously and were
+                     re-proved once the route existed.
+Green evidence:      docs/evidence/H3-01/green.md — 23 tests / 79 assertions in
+                     the slice, 196 tests / 451 assertions overall, Pint and
+                     PHPStan clean, plus 14 curl cases against the real server
+                     with a real Fortify session cookie.
+Implementation notes: POST /showtimes/{public_id}/holds behind `auth`, the first
+                     endpoint that requires an account (ADR-014, PP-01).
+
+                     Status codes were decided here because no requirement names
+                     them. 404 when the showtime is not publicly resolvable,
+                     409 when it is resolvable but not on sale, 422 for anything
+                     the customer can fix by editing the request. H3-02 returns
+                     409 for a seat lost under lock, so every losing request in
+                     the H3-04 harness falls into one class rather than two.
+
+                     No availability check. A seat's status is read under
+                     lockForUpdate() in H3-02, and checking it here as well would
+                     add a second answer that can disagree with the first. This
+                     slice therefore cannot reject a taken seat, by design.
+
+                     Validation reuses GetSeatMap rather than issuing its own
+                     query, so the rules are applied against exactly the map the
+                     customer's request was made from.
+
+                     Two things the suite did not show, both recorded in the
+                     evidence: an unauthenticated POST returns 419 on a real
+                     client (CSRF sits before auth) where postJson() sees 401;
+                     and Laravel's default messages named the payload key, which
+                     is not the accessible message AC-004 asks for. messages()
+                     was added and demonstrated red before green.
+Open decisions:      none. The 404/409/422 mapping above is an implementation
+                     decision, not a policy change — if H3-02 needs a different
+                     conflict shape, change it there and here together.
+```
+
 ### H3-02 — Transactional acquisition protocol
 
 Implement only after failing PostgreSQL integration tests demonstrate the risk:
@@ -605,12 +648,83 @@ Implement only after failing PostgreSQL integration tests demonstrate the risk:
 
 **Trace:** BR-02–05; FR-007–012; RULE-001–005/012–014; ADR-004; AC-001–003.
 
+```text
+Status:              DONE (2026-08-10)
+Requirement IDs:     BR-02-05; FR-007-012; RULE-001-005/012-014; ADR-004;
+                     AC-001-003; HLD-01; INV-02; DOMAIN_STATE_MODELS.md §12.2
+Gate/P0 IDs:         G3; P0 invariants 1, 2, 3, 7
+Red evidence:        docs/evidence/H3-02/red.md — 23 of 23 errored on a missing
+                     action and a missing exception class.
+Green evidence:      docs/evidence/H3-02/green.md — 24 tests / 82 assertions in
+                     the slice, plus nine curl requests against the real server
+                     and the committed row counts they produced.
+Implementation notes: Migrations 170000-170002: holds, hold_items and their
+                     deferred integrity triggers (step 8), the composite
+                     (hold_id, showtime_id) FK on showtime_seats (step 11, hold
+                     half only), and outbox_events + audit_events (step 14).
+
+                     AcquireSeatHold follows §12.2 in order: lock the showtime,
+                     resolve seats, lock inventory sorted by seat ID, guard,
+                     insert hold and items, flip inventory, write outbox and
+                     audit, commit. Refusals are thrown inside the transaction,
+                     so the rollback is the all-or-none enforcement rather than
+                     a compensating write.
+
+                     Deliberately absent: inline reclamation of expired holds,
+                     which Phase 4 owns. Until then an expired HELD row is not
+                     acquirable, so a customer can be refused a seat the map
+                     showed as free. That is a refusal, never a false success,
+                     which is the side GetSeatMap already documents as safe.
+
+                     Three defects the schema caught rather than the tests: the
+                     five-minute CHECK rejected a test that moved expires_at
+                     alone; one trigger function could not serve both holds and
+                     hold_items because plpgsql resolves NEW against the real
+                     table; and RefreshDatabase hides DEFERRED constraint
+                     triggers, so the backstop tests were passing without ever
+                     running them.
+Open decisions:      none. The p95 question raised by H3-04 is recorded there.
+```
+
 ### H3-03 — Scoped idempotency and lost-response recovery
 
 Test same key/same fingerprint, same key/different fingerprint, replay after
 commit, and concurrent duplicate submission.
 
 **Trace:** FR-017/028/029; RULE-006; NFR-002/007; AC-009; EX-09/13.
+
+```text
+Status:              DONE (2026-08-10)
+Requirement IDs:     FR-017/028/029; RULE-006; NFR-002/007; AC-009; EX-09/13;
+                     DOMAIN_STATE_MODELS.md §13, §14, §15
+Gate/P0 IDs:         G3; P0 invariant 4
+Red evidence:        docs/evidence/H3-03/red.md — 15 tests, 10 red on a missing
+                     table and a key that was not read at all.
+Green evidence:      docs/evidence/H3-03/green.md — 15 tests / 44 assertions,
+                     plus the curl matrix showing a replay returning the same
+                     hold and a reused key rejected.
+Implementation notes: EnforceIdempotency middleware on the hold route, scoped
+                     "holds.acquire", ahead of validation and the action — where
+                     LOGICAL_ERD.md §6 also puts it in the lock order.
+
+                     The key is REQUIRED. Nothing states that explicitly, but P0
+                     invariant 4 is unconditional and a guarantee a client can
+                     opt out of by omitting a header is not a guarantee.
+
+                     A 409 refusal is an outcome and is replayed: retrying a lost
+                     conflict must not return 201 because the seat freed up in
+                     between. A 400/404/422 releases the key, because the command
+                     never ran.
+
+                     The fingerprint canonicalises the body, so a retry with the
+                     seats in another order replays rather than being rejected as
+                     reuse. This assumes no list in a Seatly command carries
+                     meaning in its order.
+Open decisions:      none. Known limitation recorded in the evidence: a process
+                     killed between claim and settle strands a key IN_PROGRESS
+                     until the 30-day sweep. The Phase 4 expiry worker is the
+                     natural owner of reclaiming those.
+```
 
 ### H3-04 — Same-seat contention harness
 
@@ -624,6 +738,37 @@ Coordinate at least 100 requests inside approximately one second:
 
 **Trace:** BO-01; AC-001; NFR-001; RELEASE_GATES same-seat contention.
 
+```text
+Status:              DONE (2026-08-10)
+Requirement IDs:     BO-01; AC-001; NFR-001; RELEASE_GATES.md same-seat contention
+Gate/P0 IDs:         G3 stop gate; P0 invariants 1, 2
+Green evidence:      docs/evidence/H3-04/green.md and concurrency-gate.json —
+                     three seeded runs of 100 forked attempts. 1 held, 99
+                     SEAT_TAKEN, 0 errors, 0 deadlocks, invariants clean, every
+                     run.
+Implementation notes: php artisan seatly:concurrency-gate. One forked process per
+                     attempt, each with its own connection, released from a shared
+                     instant. Measured start spread is ~50 ms across 100
+                     processes, which is what distinguishes real contention from
+                     a harness that ran its attempts in sequence — the first
+                     version of this gate could have passed without it.
+
+                     Deadlocks are read from pg_stat_database rather than
+                     inferred from retries the transaction helper swallows.
+
+                     It calls the action, not HTTP. The invariant lives in the
+                     transaction; the request layer is proved by H3-01/H3-03.
+Open decisions:      p95 is 1.25-1.83 s against the 750 ms in
+                     MVP_POLICY_BASELINE.md §3. RELEASE_GATES.md G3 sets no
+                     latency bar and DELIVERY_TIMELINE.md puts performance
+                     evidence in Sprint 7, so the number is reported rather than
+                     graded. Cause understood: every hold locks the showtime row
+                     first, serializing holds per showtime. Needs a decision
+                     before Sprint 7 — restate the target as applying to the
+                     normal mixed peak, or change the lock protocol and re-open
+                     the RULE-020/021 races it closes.
+```
+
 ### H3-05 — Overlapping multi-seat harness
 
 Run repeated seeded contention for:
@@ -635,6 +780,18 @@ C: A1 + A3
 ```
 
 No losing request may retain one seat.
+
+```text
+Status:              DONE (2026-08-10)
+Requirement IDs:     BO-02; AC-002; RULE-003; RELEASE_GATES.md overlapping groups
+Gate/P0 IDs:         G3 stop gate; P0 invariant 3
+Green evidence:      docs/evidence/H3-05/green.md — three seeded runs, each
+                     1 held / 99 conflicts / exactly 2 seats HELD.
+Implementation notes: Same command, --scenario=overlapping. The gate asserts the
+                     held-seat count equals the winner's whole set, so a loser
+                     that retained one of its two seats fails the run.
+Open decisions:      none
+```
 
 **Trace:** BO-02; AC-002; RULE-003; RELEASE_GATES overlapping groups.
 
@@ -649,6 +806,22 @@ Report at minimum:
 - partial requested-set ownership;
 - invalid state/link combinations.
 
+```text
+Status:              DONE (2026-08-10)
+Gate/P0 IDs:         G3; P0 invariants 1, 2, 3
+Red evidence:        docs/evidence/H3-06/red.md
+Green evidence:      docs/evidence/H3-06/green.md — 13 tests / 39 assertions.
+Implementation notes: php artisan seatly:invariants, ten checks plus one declared
+                     deferred. Every check is proved twice: clean data returns
+                     nothing, and a planted violation is found — a check that has
+                     never gone red proves nothing.
+
+                     Duplicate CONFIRMED ownership needs bookings (Phase 5). It
+                     reports itself as DEFERRED in every run rather than silently
+                     not existing, and a test fails if someone drops it.
+Open decisions:      none
+```
+
 ### H3-07 — Gate evidence
 
 Capture:
@@ -661,6 +834,17 @@ Capture:
 - deadlock/retry information;
 - invariant SQL and output;
 - repeated-run results.
+
+```text
+Status:              DONE (2026-08-10)
+Green evidence:      docs/evidence/H3-07/green.md maps every required field to
+                     where it is captured in
+                     docs/evidence/H3-04/concurrency-gate.json.
+Implementation notes: Schema checksum is md5 over information_schema.columns plus
+                     every pg_constraint definition, so a migration change moves
+                     it and an old report cannot be mistaken for a current one.
+Open decisions:      none
+```
 
 **Phase exit:** Zero duplicate ownership and zero partial holds across repeated
 seeded real-PostgreSQL runs. Any flaky correctness result fails the gate.

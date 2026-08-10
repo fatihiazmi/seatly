@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Holds\AcquireSeatHold;
 use App\Actions\Showtimes\PublishShowtime;
 use App\Enums\SeatInventoryStatus;
 use App\Enums\SeatType;
 use App\Models\Hall;
+use App\Models\Hold;
 use App\Models\Movie;
 use App\Models\Seat;
 use App\Models\SeatCompanionLink;
@@ -178,10 +180,7 @@ class SeatMapTest extends TestCase
     public function test_a_held_seat_is_not_selectable(): void
     {
         [$showtime, $seats] = $this->publishedShowtime(2);
-        $this->markInventory($showtime, $seats->first(), SeatInventoryStatus::Held, [
-            'hold_id' => 1,
-            'hold_expires_at' => now()->addMinutes(4),
-        ]);
+        $this->hold($showtime, $seats->first());
 
         $seat = $this->seatFromMap($showtime, $seats->first()->public_id);
 
@@ -212,10 +211,7 @@ class SeatMapTest extends TestCase
         // the cleanup worker touches it. The map applies the same rule, so it
         // cannot report a seat unavailable that a hold request would grant.
         [$showtime, $seats] = $this->publishedShowtime(2);
-        $this->markInventory($showtime, $seats->first(), SeatInventoryStatus::Held, [
-            'hold_id' => 1,
-            'hold_expires_at' => now()->subSecond(),
-        ]);
+        $this->hold($showtime, $seats->first(), expired: true);
 
         $this->assertTrue($this->seatFromMap($showtime, $seats->first()->public_id)['selectable']);
     }
@@ -225,10 +221,7 @@ class SeatMapTest extends TestCase
         // "Held" versus "confirmed" tells a stranger whether someone is midway
         // through checkout. FR-004 only requires selectable versus unavailable.
         [$showtime, $seats] = $this->publishedShowtime(2);
-        $this->markInventory($showtime, $seats->first(), SeatInventoryStatus::Held, [
-            'hold_id' => 1,
-            'hold_expires_at' => now()->addMinutes(4),
-        ]);
+        $this->hold($showtime, $seats->first());
 
         $encoded = json_encode($this->getJson($this->url($showtime))->json());
 
@@ -314,6 +307,42 @@ class SeatMapTest extends TestCase
     }
 
     // --- helpers ----------------------------------------------------------
+
+    /**
+     * A real hold, not a fabricated `hold_id`.
+     *
+     * `showtime_seats` carries a composite FK to `holds (id, showtime_id)` since
+     * H3-02, so an inventory row can no longer point at a hold that does not
+     * exist — which is what these fixtures used to do.
+     *
+     * `expired: true` backdates the whole hold rather than only its deadline:
+     * `holds_expiry_is_five_minutes` is how "a hold is never extended" is
+     * expressed in the schema, and it rejects moving one without the other.
+     */
+    private function hold(Showtime $showtime, Seat $seat, bool $expired = false): Hold
+    {
+        $hold = app(AcquireSeatHold::class)->handle(
+            User::factory()->create(),
+            $showtime,
+            [$seat->public_id]
+        );
+
+        if ($expired) {
+            DB::statement(
+                "UPDATE holds SET created_at = created_at - interval '6 minutes',
+                                  expires_at = expires_at - interval '6 minutes'
+                 WHERE id = ?",
+                [$hold->getKey()]
+            );
+            DB::statement(
+                "UPDATE showtime_seats SET hold_expires_at = hold_expires_at - interval '6 minutes'
+                 WHERE hold_id = ?",
+                [$hold->getKey()]
+            );
+        }
+
+        return $hold->refresh();
+    }
 
     /**
      * @param  array<string, mixed>  $attributes
