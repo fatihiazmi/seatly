@@ -52,4 +52,19 @@ class Hall extends Model
     {
         return $this->hasMany(Showtime::class);
     }
+
+    /**
+     * True while an upcoming published showtime references this hall, during
+     * which the sellable seat set, seat identity, ordering and classification
+     * are immutable (`ADR-019`).
+     *
+     * The database enforces this with a trigger; this is the read used to refuse
+     * an edit before attempting it, and to grey out controls in the admin UI.
+     * Both ask PostgreSQL for the time, so they cannot disagree with each other
+     * about "upcoming".
+     */
+    public function layoutIsFrozen(): bool
+    {
+        return $this->showtimes()->onSale()->exists();
+    }
 }

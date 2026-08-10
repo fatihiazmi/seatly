@@ -126,6 +126,12 @@ the decision record, backlog, traceability, tests, and affected documentation.
 - Prefer Eloquent for ordinary persistence.
 - Query Builder or parameterized SQL is expected on concurrency-critical paths.
 - Use PostgreSQL constraints as final backstops.
+- Always write `CREATE OR REPLACE FUNCTION` in migrations. `migrate:fresh` drops
+  tables and their triggers but leaves standalone functions behind, so a plain
+  `CREATE FUNCTION` succeeds on the first run of the test suite and fails on the
+  second. Triggers themselves may use plain `CREATE TRIGGER`.
+- `DB::unprepared()` requires a `literal-string`, so build the SQL as a literal
+  heredoc rather than interpolating it, or PHPStan will reject the call.
 - Store money as integer sen with ISO currency.
 - Persist authoritative instants in UTC using `timestamptz`.
 - Use the PostgreSQL clock for expiry and transaction-boundary decisions.

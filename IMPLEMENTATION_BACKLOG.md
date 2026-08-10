@@ -448,7 +448,59 @@ Reject changes that would corrupt active or historical showtime inventory.
 Where detailed edit policy remains Open, implement only unambiguous database
 protections and leave workflow decisions blocked.
 
-**Trace:** FR-038/041; NFR-010; ADR-005.
+**Trace:** FR-038/041; NFR-010; ADR-005/019.
+
+```text
+Status:              DONE (2026-08-10)
+Requirement IDs:     FR-038/041; NFR-010; ADR-005/019
+Gate/P0 IDs:         G1, G2
+Red evidence:        docs/evidence/C2-03/red.md — 10 of 20 cases failed, each
+                     reporting that the expected refusal did not happen.
+Green evidence:      docs/evidence/C2-03/green.md — 148 tests / 304 assertions,
+                     Pint and PHPStan clean, plus a direct psql UPDATE refused
+                     against a frozen hall and accepted against an open one.
+Implementation notes: the edit policy is no longer Open — ADR-019 closed it
+                     before this slice began, so this implements a defined table
+                     rather than "unambiguous database protections only".
+
+                     Enforcement is a BEFORE trigger on seats and on halls, not
+                     an Action, because NFR-010 is about what the data permits: a
+                     direct SQL write must not be able to corrupt published
+                     inventory. Proven by running the UPDATE through psql.
+
+                     hall_layout_is_frozen(hall_id) is a STABLE SQL function
+                     wrapping the same derived on-sale rule used everywhere else,
+                     so the trigger and Hall::layoutIsFrozen() cannot disagree
+                     about what "upcoming" means — both ask PostgreSQL for the
+                     time inside the asking transaction.
+
+                     Frozen on seats: hall_id, row_label, seat_number, sort_order,
+                     seat_type, is_active, plus INSERT and DELETE. Frozen on
+                     halls: is_active. Editable throughout: display_label,
+                     x_position, y_position, hall name and code.
+
+                     The seat UPDATE guard checks both OLD and NEW hall_id, so a
+                     seat cannot be moved out of a frozen hall or into one.
+
+                     layout_version is bumped by an AFTER trigger rather than by
+                     application code, for the same reason as the guard. Laying
+                     out a 60-seat hall leaves it at 61: initial construction
+                     counts, because no state marks a layout as finished. The
+                     value is monotonic and its magnitude carries no meaning; the
+                     test states this explicitly rather than leaving it to be
+                     rediscovered.
+
+                     One defect, and a repeat of the C2-01 one: migrate:fresh
+                     drops tables and their triggers but leaves standalone
+                     functions, so plain CREATE FUNCTION passed on the first suite
+                     run and collided on the second. All four functions now use
+                     CREATE OR REPLACE, and the rule is recorded in CLAUDE.md so
+                     it does not happen a third time.
+Open decisions:      none for halls and seats. Venue deactivation with upcoming
+                     published showtimes is the same class of problem, is not
+                     covered by ADR-019, and remains with FR-041 — it should be
+                     closed before the venue admin screens.
+```
 
 ### C2-04 — Minimal authoritative seat-map endpoint
 
