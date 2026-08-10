@@ -8,8 +8,15 @@
 
 This record is the output of backlog item `S0-01`. It lists every place where the
 Sprint 0 documents contradicted each other, states which document won, and names
-the files amended. Nothing here decides a gated policy: `PD-01`–`PD-10` remain
-**Proposed** and payment/showtime-cancellation implementation stays blocked.
+the files amended. Nothing here decides a gated policy: at the time of writing,
+`PD-01`–`PD-10` remained **Proposed** and payment/showtime-cancellation
+implementation stayed blocked.
+
+**Superseded in part.** Later the same day the Product Owner resolved all ten in
+a separate review session — `ADR-015`, `ADR-016`, `ADR-017`. This record is kept
+as written, because the distinction matters: reconciliation made the schema able
+to *hold* those outcomes, and only the review session *approved* them. §7 below
+carries the current status.
 
 ## 1. Reconciliation rules used
 
@@ -31,18 +38,18 @@ the files amended. Nothing here decides a gated policy: `PD-01`–`PD-10` remain
 |---|---:|---|
 | Accepted business policies | PP-01–PP-13 | `BRD.md` §5.2 |
 | Accepted architecture decisions | ADR-001–ADR-014 | `DECISIONS.md` |
-| Proposed, gated | PD-01–PD-10 | `SPRINT_0_REVIEW_DECISIONS.md`, `DOMAIN_STATE_MODELS.md` §2 |
-| Open BRD decisions | D6–D15, D20 | `BRD.md` §18 |
-| Resolved BRD decisions | D1, D16–D19 | `BRD.md` §18 |
-| Open business rules | RULE-022–025 | `BRD.md` §8 |
+| Proposed, gated at the time | PD-01–PD-10 | `SPRINT_0_REVIEW_DECISIONS.md`, `DOMAIN_STATE_MODELS.md` §2 |
+| Open BRD decisions at the time | D6–D15, D20 | `BRD.md` §18 |
+| Resolved BRD decisions at the time | D1, D16–D19 | `BRD.md` §18 |
+| Open business rules at the time | RULE-022–025 | `BRD.md` §8 |
 
-Implementation consequence, unchanged by this record:
+Implementation consequence at the time of this record:
 
 - **Unblocked:** Phase 0, Phase 1, Phase 2, Phase 3, Phase 4.
 - **Blocked:** Phase 5 (payment) pending D6–D10 / PD-01–PD-06.
 - **Blocked:** Phase 6 showtime-cancellation slices pending D13/D15 / PD-08–PD-10.
-- Phase 6 booking-ownership and customer-cancellation slices depend on PD-07
-  only for the exact boundary; ownership/authorization work (`O6-01`) is not gated.
+
+All of these are unblocked as of the `ADR-015`/`016`/`017` session.
 
 ## 3. Findings and resolutions
 
@@ -229,15 +236,30 @@ All three now carry computed waypoints and pass
 
 Unchanged by reconciliation. Listed so nothing here reads as progress on them.
 
-| ID | Decision | Blocks |
-|---|---|---|
-| D6 / PD-01 | Simulator contract; callback deadline | `P5-01` |
-| D7 / PD-02, PD-03 | Payment timeout; reconciliation window closure | `P5-01`, `P5-04` |
-| D8 / PD-04, PD-05 | Contradictory outcome precedence | `P5-04` |
-| D9 / PD-06 | Hold release after explicit payment failure | `P5-01` |
-| D10 | Late-success remedy | `P5-04` |
-| D11 / PD-07 | Exact cancellation boundary | `O6-02` boundary tests |
-| D13 / PD-09, PD-10 | Showtime-cancellation effects and terminality | `O6-03` |
-| D14 | QR payload and rotation detail | `P5-03` QR slice |
-| D15 / PD-08 | Admin roles and cancellation authority | `O6-03`, `BKG-03` |
-| D20 | Named approvers for each governance role | G0 multi-role sign-off |
+**Update, 2026-08-10:** `PD-01`–`PD-10` were resolved later the same day in a
+separate review session, recorded as `ADR-015`, `ADR-016` and `ADR-017`. That
+closed `D6`–`D13` and the MVP portion of `D15`. The table below is kept as the
+state at the time of reconciliation; see
+[`SPRINT_0_REVIEW_DECISIONS.md`](SPRINT_0_REVIEW_DECISIONS.md) for outcomes.
+
+| ID | Decision | Blocked | Status now |
+|---|---|---|---|
+| D6 / PD-01 | Simulator contract; callback deadline | `P5-01` | Closed — `ADR-015` |
+| D7 / PD-02, PD-03 | Payment timeout; reconciliation window closure | `P5-01`, `P5-04` | Closed — `ADR-015` |
+| D8 / PD-04, PD-05 | Contradictory outcome precedence | `P5-04` | Closed — `ADR-015` |
+| D9 / PD-06 | Hold release after explicit payment failure | `P5-01` | Closed — `ADR-015`, amended |
+| D10 | Late-success remedy | `P5-04` | Closed — `ADR-015` |
+| D11 / PD-07 | Exact cancellation boundary | `O6-02` boundary tests | Closed — `ADR-016` |
+| D13 / PD-09, PD-10 | Showtime-cancellation effects and terminality | `O6-03` | Closed — `ADR-017`, amended |
+| D14 | QR payload and rotation detail | `P5-03` QR slice | **Still open** |
+| D15 / PD-08 | Admin roles and cancellation authority | `O6-03`, `BKG-03` | Role split closed — `ADR-017`. Hall/seat versioning still open |
+| D20 | Named approvers for each governance role | G0 multi-role sign-off | **Still open** |
+
+One finding of this record turned out to be incomplete. `RC-03` removed the
+stored `ENDED` showtime state, which was right — but it left `ST-04` guarded only
+on `PUBLISHED`, so a finished showtime remained cancellable. `ADR-017` adds the
+missing `transaction_timestamp() < starts_at` guard.
+
+`RC-05` and `RC-06` also proved to be half of a pattern: the ERD was missing
+`reconciliation_cases` too, for the same reason it was missing a showtime-scoped
+cancellation record. `ADR-015` adds it.

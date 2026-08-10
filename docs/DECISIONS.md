@@ -229,10 +229,14 @@ The Product Owner approved public browsing with authentication from the hold onw
 
 The same approval adopts the council-recommended accessible/companion-seat rules, `en-MY`, `Asia/Kuala_Lumpur`, `MYR`, performance/load targets, 15-minute RPO, four-hour service RTO, backup schedule, and retention/deletion rules recorded in [MVP Policy and Operational Baseline](MVP_POLICY_BASELINE.md).
 
-The following detailed state-transition policies remain gated before their implementation slices:
+On 2026-08-10 the same Product Owner resolved `PD-01`–`PD-10`, recorded as
+`ADR-015` (payment attempt lifecycle), `ADR-016` (cancellation cutoff) and
+`ADR-017` (staff roles and showtime cancellation). That closes BRD `D6`–`D11`,
+`D13`, the MVP portion of `D15`, and `RULE-022`–`RULE-025`.
 
-1. Payment timeout, contradictory-outcome precedence, and explicit-failure hold-release behavior.
-2. Showtime-cancellation remedies and administrative authority.
+No detailed state-transition policy remains gated. `D14` (QR payload detail and
+rotation) and `D20` (named approvers per governance role) are still open, and
+neither blocks an implementation slice.
 
 ---
 
@@ -305,6 +309,239 @@ could not both stand (`RC-01`).
 
 Anonymous polling produces measured abuse or cost, or a future decision
 introduces personalised catalogue content.
+
+---
+
+## ADR-015 — Payment attempt lifecycle
+
+**Status:** Accepted (Product Owner approval: 2026-08-10)
+**Resolves:** `PD-01`–`PD-06`, BRD `D6`–`D10`, `RULE-022`–`RULE-024`
+
+### Decision
+
+**One clock (`PD-01`, accepted with amendment).** A payment attempt's deadline is
+the hold's existing `expires_at`. No second payment timer and no `timeout_at`
+column. A deadline later than `expires_at` is meaningless because `PP-08` forbids
+a late success from confirming; a deadline earlier would declare timeout while
+the seat is still legitimately held.
+
+Amendment: `PAY-01` gains a guard. Checkout initiation is rejected unless
+
+```text
+transaction_timestamp() < hold.expires_at - interval '60 seconds'
+```
+
+returning `HOLD_TOO_CLOSE_TO_EXPIRY`. This is a validation rule, not a second
+clock. Without it a customer who spends 4m55s choosing seats can start a payment
+with five seconds of budget, producing an attempt that cannot succeed and a
+reconciliation case for someone who did nothing wrong.
+
+**Timeout is absence, not failure (`PD-02`, accepted with addition).** If no
+final callback has committed by `hold.expires_at`, a `PENDING` attempt becomes
+`TIMED_OUT`, the hold expires, and a reconciliation case opens.
+
+Addition — `PAY-05b`: an attempt still in `CREATED` at hold expiry becomes
+`FAILED` with reason `NEVER_SUBMITTED` and opens **no** case. `PAY-05` covered
+only `PENDING`, leaving `CREATED` with no exit. The two are not equally
+ambiguous: initiation was never durably sent, so no money can have moved.
+Reconciliation stays a queue that means "money might have moved", which is the
+only reason anyone would read it.
+
+**Closure stops the clock, it does not seal the record (`PD-03`, accepted with
+addition).** Timed-out and reconciliation attempts stay open for 24 hours, then
+close as `UNRESOLVED`. Nothing in MVP scope can resolve a case by hand —
+operator capability is inspection only (`FR-042`–`FR-044`) — so the window
+exists for the provider, not for staff.
+
+Addition — `PAY-11b`: `UNRESOLVED` plus a valid late success becomes
+`LATE_SUCCESS_REFUND_REQUIRED` and reopens the case. `UNRESOLVED` previously had
+no exit at all, which would have buried a genuinely paid-but-unbooked customer
+as "we stopped waiting". No booking is created and no inventory is touched.
+
+**Commit order is the tiebreak (`PD-04`, accepted as written).** The first valid,
+authenticated, correctly correlated final outcome committed in PostgreSQL wins.
+Provider timestamps and sequence claims are recorded but never authoritative.
+
+Considered and rejected: ordering by provider sequence with a settling window
+before acting. It makes external data authoritative over PostgreSQL, which
+`ADR-004` refuses, and puts a delay on every success to serve a rare reordering.
+When commit order and provider intent disagree, the losing outcome still lands in
+the append-only inbox and opens reconciliation, so nothing is lost silently.
+
+**Contradictions never reverse committed state (`PD-05`, accepted with a new
+table).** A later contradictory callback cannot undo a booking, cancellation,
+inventory release, or earlier final outcome. `PAY-13` leaves a confirmed booking
+standing and the cinema absorbing the loss; `PAY-14` leaves the customer paid
+with no seat and a refund owed. Both resolve toward the customer.
+
+New table — `reconciliation_cases`. `DOMAIN_STATE_MODELS.md` §7.1 has always
+required three records: payment attempt, callback event, and reconciliation
+case. Only the first two existed in the schema. A status on `payments` cannot
+carry the two cases that matter most, because in both the payment is and must
+remain `SUCCEEDED`:
+
+- `PAY-13` — a committed success later contradicted by a failure.
+- `PD-09` — a confirmed booking killed by showtime cancellation, refund owed.
+
+**Failure does not end the checkout (`PD-06`, amended).** A valid explicit
+payment failure sets the attempt `FAILED` but leaves the hold `ACTIVE`. The
+customer may start a further attempt until `expires_at`, to a maximum of three
+attempts per hold; the third failure releases the hold with reason
+`PAYMENT_FAILED`.
+
+Rationale: PD-06 as drafted released the hold on first failure, which made
+`payments.attempt_number` and `UNIQUE (hold_id, attempt_number)` unreachable —
+`PAY-01` requires an `ACTIVE` hold, so a second attempt could never exist. It
+also meant a declined card, the commonest real failure, cost the customer their
+seats with minutes left on a hold they legitimately owned. Retry within the
+window weakens no invariant: the seats stay owned by the same customer until the
+same deadline either way, and the 60-second guard applies to each retry.
+
+### Consequences
+
+- `HLD-05` becomes conditional — it fires on the third failure, not the first.
+- `PAY-01` admits a hold carrying prior `FAILED` attempts, and rejects a fourth
+  with `PAYMENT_ATTEMPT_LIMIT_REACHED`.
+- `payments.attempt_number` and its unique constraint are live.
+- `reconciliation_cases` is written by `PAY-05`, `PAY-06`, `PAY-08`, `PAY-09`,
+  `PAY-11b`, `PAY-13` and showtime cancellation.
+- Phase 5 is unblocked.
+
+### Revisit trigger
+
+A real payment provider is introduced, real refunds enter scope, or measured
+retry behaviour shows the cap of three is wrong.
+
+---
+
+## ADR-016 — Cancellation cutoff is a snapshotted policy
+
+**Status:** Accepted (Product Owner approval: 2026-08-10)
+**Resolves:** `PD-07`, BRD `D11`, `RULE-015` boundary
+
+### Decision
+
+Customer cancellation is eligible only when
+
+```text
+transaction_timestamp() < scheduled_start_at - cutoff
+```
+
+Equality is ineligible. The cutoff is **not** a literal. `showtimes` carries
+`cancellation_cutoff_minutes NOT NULL DEFAULT 120`, snapshotted onto the booking
+at confirmation as `cancellation_cutoff_minutes_snapshot`, and the guard reads
+the snapshot.
+
+### Context
+
+The "exact timezone boundary" left open by `RULE-015` and `D11` was a
+non-question: `starts_at` is `timestamptz`, so the comparison is instant
+arithmetic, and `Asia/Kuala_Lumpur` has no DST. Venue-local time governs how the
+deadline is *explained*, never how it is *evaluated*.
+
+The real conflict was that `PROJECT_BRIEF.md` §5 promised a "configurable"
+cutoff while `PD-07` hard-coded `interval '2 hours'` into the guard.
+
+### Rationale
+
+A cancellation cutoff is a promise made at the point of sale, in the same class
+as the price, the seat label, and the venue name — all of which this design
+already snapshots so a later edit cannot rewrite what a customer was sold.
+Evaluating a live setting would silently re-term every existing booking the day
+the policy changed. Two columns with a default make "configurable" true without
+building a settings engine.
+
+### Consequences
+
+- Changing the policy affects only showtimes published afterwards.
+- Cancellation eligibility is answerable from the booking row alone.
+- An eligible cancellation always returns seats with at least the cutoff left to
+  resell them, satisfying `PP-07`.
+
+### Revisit trigger
+
+Per-venue or per-movie cutoffs are required, or a regulator sets a minimum.
+
+---
+
+## ADR-017 — Staff roles and showtime cancellation
+
+**Status:** Accepted (Product Owner approval: 2026-08-10)
+**Resolves:** `PD-08`–`PD-10`, BRD `D13`, MVP portion of `D15`, `RULE-025`
+
+### Decision
+
+**Two staff roles (`PD-08`, accepted with the split named).**
+
+| Role | Capabilities |
+|---|---|
+| `OPERATOR` | Movie, venue, hall and seat maintenance; showtime create, update, publish; all inspection of bookings, inventory, exceptions and audit |
+| `ADMIN` | Everything `OPERATOR` has, plus the irreversible ones — `showtimes.cancel`, `bookings.cancel`, seat block and unblock |
+
+`roles.code` already carried `CUSTOMER | OPERATOR | ADMIN`, and
+`RELEASE_GATES.md` already requires the authorization matrix to be exercised
+with "operator and admin identities" — a gate that is only meaningful if there
+is something an operator cannot do. Collapsing to one staff role would have
+deleted the privilege-escalation case, which is the first thing a security
+reviewer looks for. No approval chain and no deeper hierarchy in MVP.
+
+Cancellation reasons are constrained codes, never free text, per §3.3.
+
+**Cancellation effects are definite (`PD-09`, amended).** In one transaction the
+showtime moves `PUBLISHED → CANCELLED`, active holds are released, unsold and
+released seats are blocked, later confirmation is prevented, confirmed bookings
+move to `SHOWTIME_CANCELLED`, and affected QR linkage is revoked.
+
+Amendment one — `ST-04` gains the guard `transaction_timestamp() < starts_at`,
+rejecting with `SHOWTIME_ALREADY_STARTED`. Removing the stored `ENDED` state in
+`RC-03` left a finished showtime sitting in `PUBLISHED` forever, so `ST-04`'s
+only guard would have allowed an admin to "cancel" a screening from six weeks
+ago — voiding past bookings, revoking QRs for a film people had already watched,
+and raising refunds for it.
+
+Amendment two — "opens reconciliation **where needed**" is replaced by a
+countable rule: **one reconciliation case per confirmed booking**, reason
+`SHOWTIME_CANCELLED_REFUND_DUE`, plus a case for every payment-ambiguous
+attempt. Every confirmed booking has a `SUCCEEDED` payment and the cinema is the
+party cancelling, so a refund is owed for all of them, not for a judgement call's
+worth of them.
+
+Retroactive voiding of a failed screening is a real cinema event and is
+deliberately **not** modelled by overloading this command. It goes to the
+post-MVP backlog as a separate command with its own authority and audit.
+
+**Terminal, behind an impact preview (`PD-10`, accepted with a control).**
+Cancellation is terminal. Reschedule, reopen and uncancel are forbidden; create a
+new showtime instead. Uncancelling would have to restore released holds, blocked
+inventory, revoked QRs and abandoned payment intent, all of which have moved on.
+
+Control: the cancel command is two-step. A preview returns the counts of active
+holds, confirmed bookings and reconciliation cases that the command will create;
+the caller then confirms, quoting the showtime reference. The BPMN admin lane
+already modelled this as `a_review`, "Authorise and review cancellation impact" —
+the rules simply never required it.
+
+Rationale: with one admin capability, no approval chain, sweeping effects, no
+undo, and no notifications in scope, a single misclick destroys a sold-out
+screening irreversibly and silently. The audit record only tells you afterwards.
+A typed confirmation costs no state, no schema and no timer, and is the only
+control available given `PD-08`.
+
+Considered and rejected: a grace window deferring booking and inventory effects.
+It buys a real undo at the cost of a second timer, an intermediate state, and a
+partially-cancelled showtime to reason about in every race in §13.
+
+### Consequences
+
+- Phase 6 showtime-cancellation slices (`O6-03`) are unblocked.
+- `O6-01`'s authorization matrix gains customer / operator / admin as three
+  distinct identities.
+- No email, SMS, funds movement or real refund is performed by any of this.
+
+### Revisit trigger
+
+A second venue or franchise introduces genuine segregation-of-duties
+requirements, real refunds enter scope, or notifications are added.
 
 ## Rejected MVP technologies/features
 

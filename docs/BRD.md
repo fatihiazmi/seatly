@@ -15,6 +15,7 @@
 |---|---|---|---|
 | 0.1 | 2026-08-09 | Initial BRD incorporating project brief, PM governance, BA requirements, acceptance criteria, and BPMN process | Product policy baseline approved 2026-08-10; detailed operational decisions remain open |
 | 0.2 | 2026-08-10 | Baseline reconciliation applied — `RC-01` (browse authentication resolved, `RULE-010` rewritten, `D1` closed), `RC-10` (gate timings aligned to the delivery plan), `RC-13` (approval record corrected to PP-01–PP-13). See [`BASELINE_RECONCILIATION.md`](BASELINE_RECONCILIATION.md) | Product Owner approved `RC-01` on 2026-08-10; `D6`–`D15` and `D20` remain open |
+| 0.3 | 2026-08-10 | `PD-01`–`PD-10` resolved as `ADR-015` (payment lifecycle), `ADR-016` (cancellation cutoff), `ADR-017` (staff roles and showtime cancellation). `RULE-022`–`RULE-025` become Accepted; `RULE-015` gains its exact boundary; `D6`–`D13` closed, `D15` partly closed | Product Owner approved 2026-08-10. `D14`, `D20`, hall/seat versioning and `BO-08`'s exact accessibility standard remain open |
 
 ### Requirement status vocabulary
 
@@ -99,7 +100,8 @@ An asynchronous exception shall never be silently discarded or silently converte
 | Actor | Responsibilities and interests | Boundary notes |
 |---|---|---|
 | Customer | Browse, select showtime/seats, request hold, review price, initiate simulated payment, receive outcome, view and cancel owned booking | Browsing is public. Authentication is required from the hold request onward, and for every transactional operation thereafter (`ADR-014`, `RC-01`) |
-| Cinema Operator/Admin | Maintain movie, venue, fixed hall/seat, and showtime records; publish/cancel showtimes; inspect booking/inventory/audit | Role split and segregation of duties are Open |
+| Cinema Operator | Maintain movie, venue, fixed hall/seat, and showtime records; publish showtimes; inspect booking, inventory, exception and audit state | Cannot cancel a showtime or a booking, and cannot block or unblock seats (`ADR-017`) |
+| Cinema Admin | Everything an Operator may do, plus showtime cancellation, booking cancellation, and seat block/unblock | Irreversible commands require a controlled reason and an audit record; showtime cancellation additionally requires a confirmed impact preview (`ADR-017`) |
 | Seatly System/Worker | Authoritative validation, hold, snapshot, payment event processing, booking confirmation, expiry, status, audit, and reconciliation | Internal implementation does not change business rules |
 | Simulated Payment Provider | Accept simulated payment initiation and issue configured acknowledgement/callback scenarios | No real funds movement |
 
@@ -265,16 +267,16 @@ These policies were approved by the Product Owner on 2026-08-10 and are baseline
 | FR-016 | Create one identifiable simulated payment attempt against one snapshot/booking intent | Accepted |
 | FR-017 | Submit one logical payment request while safely recovering lost responses/retries | Accepted |
 | FR-018 | Support an asynchronous provider callback correlated to the payment attempt | Accepted |
-| FR-019 | Validate callback authenticity, structure, correlation, amount, and currency | Accepted; simulator contract Open |
+| FR-019 | Validate callback authenticity, structure, correlation, amount, and currency | Accepted (`ADR-015`) |
 | FR-020 | Process callbacks idempotently so duplicates repeat no business effect | Accepted |
-| FR-021 | Handle out-of-order/contradictory outcomes under an approved precedence policy | Accepted; policy Open |
+| FR-021 | Handle out-of-order/contradictory outcomes under the committed-order precedence policy | Accepted (`ADR-015`, `RULE-022`) |
 | FR-022 | Before confirmation, revalidate active/owned/unexpired hold, showtime, and seat coverage | Accepted |
 | FR-023 | On valid timely success, atomically convert held inventory into one confirmed booking | Accepted |
 | FR-024 | Create a unique booking reference and display-only QR linkage after confirmation | Accepted |
-| FR-025 | Explicit payment failure creates no booking and follows approved hold-release policy | Accepted; release timing Open |
-| FR-026 | Timeout is neither success nor definitive failure; expose pending/timeout/reconciliation status | Accepted; deadline/SLA Open |
-| FR-027 | Late success after hold expiry/release shall not confirm seats and shall enter approved resolution | Accepted; remedy Open |
-| FR-028 | Same-operation retry after lost response returns/recover existing logical outcome | Accepted; idempotency contract Open |
+| FR-025 | Explicit payment failure creates no booking; the hold survives for a further attempt, and the third failure releases it | Accepted (`ADR-015`, `RULE-024`) |
+| FR-026 | Timeout is neither success nor definitive failure; expose pending/timeout/reconciliation status. The deadline is the hold's expiry | Accepted (`ADR-015`, `RULE-023`) |
+| FR-027 | Late success after hold expiry/release shall not confirm seats and opens a reconciliation case recording the refund owed | Accepted (`ADR-015`, `RULE-025`) |
+| FR-028 | Same-operation retry after lost response returns/recovers the existing logical outcome | Accepted (`ADR-015`) |
 | FR-029 | Customer can retrieve latest authoritative booking/payment outcome | Accepted |
 
 ### 7.4 Booking visibility and cancellation
@@ -283,11 +285,11 @@ These policies were approved by the Product Owner on 2026-08-10 and are baseline
 |---|---|---|
 | FR-030 | My Bookings lists only bookings the authenticated customer may view | Accepted |
 | FR-031 | Booking detail shows reference, movie, venue, date/time, seats, status, and QR | Accepted |
-| FR-032 | Evaluate cancellation against ownership, booking/showtime state, time, and approved two-hour cutoff | Accepted; exact timezone boundary remains open |
+| FR-032 | Evaluate cancellation against ownership, booking/showtime state, PostgreSQL time, and the cutoff snapshotted on the booking | Accepted (`ADR-016`) |
 | FR-033 | Eligible cancellation changes booking state atomically and returns seats to availability while showtime remains on sale | Accepted |
 | FR-034 | Ineligible/duplicate cancellation returns stable state/reason without repeated effects | Accepted |
 | FR-035 | Distinguish customer cancellation from cinema/showtime cancellation | Accepted |
-| FR-036 | Showtime cancellation prevents new confirmation after cancellation becomes authoritative and routes affected state explicitly | Accepted; remedy Open |
+| FR-036 | Showtime cancellation prevents new confirmation once authoritative, applies to future showtimes only, and opens one reconciliation case per affected confirmed booking | Accepted (`ADR-017`) |
 
 ### 7.5 Administration and audit
 
@@ -322,17 +324,17 @@ These policies were approved by the Product Owner on 2026-08-10 and are baseline
 | RULE-012 | Hold expires five minutes after authoritative creation | Accepted |
 | RULE-013 | Hold cannot be extended | Accepted |
 | RULE-014 | One price applies to all seats | Accepted; currency/tax/fee source Open |
-| RULE-015 | Customer cancellation allowed until two hours before scheduled start | Accepted; exact timezone boundary Open |
+| RULE-015 | Customer cancellation is eligible only while PostgreSQL time is strictly earlier than scheduled start minus the cutoff snapshotted on the booking, default 120 minutes; equality is ineligible | Accepted 2026-08-10 (`ADR-016`) |
 | RULE-016 | Eligible cancelled seats return for resale while the showtime remains on sale | Accepted |
 | RULE-017 | QR is display-only, not an admission-validation credential | Accepted |
 | RULE-018 | Late success cannot reinstate/reclaim a seat | Accepted |
 | RULE-019 | Failure, timeout, duplicate, contradictory, uncorrelated, and late callbacks receive an explicit disposition | Accepted |
 | RULE-020 | Authoritative showtime cancellation prevents subsequent confirmation | Accepted |
 | RULE-021 | Committed database outcome determines simultaneous expiry/callback/cancellation ordering | Accepted |
-| RULE-022 | Contradictory provider outcome precedence follows an approved payment-state policy | Open |
-| RULE-023 | Payment timeout and reconciliation-window duration are operationally defined | Open |
-| RULE-024 | Hold release after explicit payment failure follows approved inventory policy | Open |
-| RULE-025 | Business remedy for late success/showtime cancellation/customer cancellation is approved before release; no real refund is implied | Open |
+| RULE-022 | The first valid final provider outcome committed in PostgreSQL wins; provider timestamps and sequence claims are never authoritative; a later contradictory outcome is recorded and opens reconciliation but reverses nothing | Accepted 2026-08-10 (`ADR-015`) |
+| RULE-023 | The payment deadline is the hold's `expires_at`; no final callback by then makes the attempt `TIMED_OUT`, which is absence of an outcome and not provider failure; the case closes as `UNRESOLVED` 24 hours later and reopens on a valid late success | Accepted 2026-08-10 (`ADR-015`) |
+| RULE-024 | Explicit payment failure leaves the hold active for a further attempt until expiry, to a maximum of three attempts; the third failure releases the hold | Accepted 2026-08-10 (`ADR-015`) |
+| RULE-025 | Late success, showtime cancellation, and administrative cancellation each open an explicit reconciliation case recording that a remedy is owed; no real refund or notification is performed in MVP | Accepted 2026-08-10 (`ADR-015`, `ADR-017`) |
 
 ---
 
@@ -542,9 +544,9 @@ Probability/impact values are initial assessments and shall be reviewed at every
 |---|---|---:|---:|---|---|
 | R1 | Concurrent requests create confirmed double-booking | Medium | Critical | DB constraints, ordered locks, contention tests, idempotent confirmation | Tech Lead — named owner Open |
 | R2 | Partial multi-seat hold | Medium | High | One all-or-none transaction and negative tests | Tech Lead — Open |
-| R3 | Duplicate/reordered payment events cause contradictory booking | High | High | Callback idempotency, state policy, reconciliation, replay tests | Tech Lead — Open |
-| R4 | Late success lacks approved remedy | Medium | High | Approve policy before G4; retain reconciliation state | Product Owner — Open |
-| R5 | Cancellation/resale rules ambiguous | Medium | High | Approve cutoff, eligibility, boundary, and resale at G0 | Product Owner — Open |
+| R3 | Duplicate/reordered payment events cause contradictory booking | High | High | Callback idempotency, committed-order precedence (`RULE-022`), reconciliation, replay tests | Tech Lead — policy closed, evidence pending |
+| R4 | Late success lacks approved remedy | Medium | High | Closed 2026-08-10: `ADR-015` opens a reconciliation case recording the refund owed | Product Owner — Closed |
+| R5 | Cancellation/resale rules ambiguous | Medium | High | Closed 2026-08-10: `ADR-016` fixes the boundary and snapshots the cutoff; `PP-07`/`INV-06` fix resale | Product Owner — Closed |
 | R6 | Accessibility defects found late | Medium | High | Standard and incremental manual/automated evidence | Accessibility Owner — Open |
 | R7 | Authorization exposes booking/admin data | Medium | High | Policies, cross-user matrix, security review, least privilege | Security Reviewer — Open |
 | R8 | Migration failure delays release | Medium | High | Expand/contract review and production-like rehearsal | Tech Lead/Operations — Open |
@@ -601,16 +603,16 @@ A proposed change to scope, non-goals, invariants, policy, timeline, architectur
 | D3 | Hold duration, start instant, rounding, authoritative clock | Product Owner + Tech Lead | G0 |
 | D4 | No-extension policy and treatment of accessibility/system interruption | Product Owner | G0 |
 | D5 | Currency, tax/fee, rounding, and price snapshot policy | Product Owner | G0 |
-| D6 | Payment simulator acknowledgement/callback/authentication/idempotency contract | Product Owner + Tech Lead | Before G4 |
-| D7 | Payment timeout and reconciliation-window closure | Product Owner + Operations | Before G4 |
-| D8 | Contradictory outcome precedence | Product Owner + Tech Lead | Before G4 |
-| D9 | Hold release timing after explicit payment failure | Product Owner | Before G4 |
-| D10 | Late-success/showtime-cancellation remedy; no real refund implied | Product Owner | Before G4 |
-| D11 | Cancellation cutoff, exact boundary, timezone, and valid source states | Product Owner | G0 |
-| D12 | Resale timing after eligible customer cancellation | Product Owner | G0 |
-| D13 | Showtime-cancellation effects for holds, pending payments, and confirmed bookings | Product Owner | Before G4 |
+| D6 | Resolved 2026-08-10: deadline, idempotency identity and callback validation fixed by `ADR-015`; the simulator implements that contract | Product Owner + Tech Lead | Closed |
+| D7 | Resolved 2026-08-10: timeout at hold expiry, 24-hour window, `UNRESOLVED` closure that reopens on late success — `ADR-015` | Product Owner + Operations | Closed |
+| D8 | Resolved 2026-08-10: PostgreSQL commit order is the sole tiebreak — `ADR-015` | Product Owner + Tech Lead | Closed |
+| D9 | Resolved 2026-08-10: hold survives failure; three attempts, third releases — `ADR-015` | Product Owner | Closed |
+| D10 | Resolved 2026-08-10: reconciliation case records the remedy owed; no real refund — `ADR-015`, `ADR-017` | Product Owner | Closed |
+| D11 | Resolved 2026-08-10: strict inequality against a snapshotted cutoff, default 120 minutes — `ADR-016` | Product Owner | Closed |
+| D12 | Resolved: `PP-07` and `RULE-016` already require eligible cancelled seats to return to availability, and `INV-06` releases them in the cancellation transaction itself | Product Owner | Closed |
+| D13 | Resolved 2026-08-10: effects, guards and impact preview fixed by `ADR-017` | Product Owner | Closed |
 | D14 | QR purpose, payload, privacy, rotation | Product Owner + Security | Before G4 |
-| D15 | Admin roles, cancellation authority, audit, hall/seat versioning | Product Owner + Security | Before G2/G4 |
+| D15 | MVP portion resolved 2026-08-10: `OPERATOR`/`ADMIN` split and cancellation authority — `ADR-017`. Hall/seat versioning remains open | Product Owner + Security | Partly closed; versioning before G2 |
 | D16 | Resolved 2026-08-10: accessible/companion policy and WCAG-oriented P0 journey recorded in `MVP_POLICY_BASELINE.md` | Product Owner + Accessibility | Approved; commercial review required |
 | D17 | Resolved 2026-08-10: load, latency, availability, and worker-lag targets recorded in `MVP_POLICY_BASELINE.md` | Product Owner + Tech Lead | Approved engineering baseline |
 | D18 | Resolved 2026-08-10: RPO/RTO, backup retention, and restore frequency recorded in `MVP_POLICY_BASELINE.md` | Product Owner + Operations | Approved engineering baseline |
@@ -624,7 +626,7 @@ A proposed change to scope, non-goals, invariants, policy, timeline, architectur
 | Role | Name | Decision | Date | Signature/reference |
 |---|---|---|---|---|
 | Business Sponsor | Open | Pending |  |  |
-| Product Owner | Fatihi | Approved with conditions | 2026-08-10 | MVP policies PP-01–PP-13 approved (`ADR-009`, `ADR-012`, `ADR-013`); browse boundary resolved (`ADR-014`); `D6`–`D15`, `D20` and `PD-01`–`PD-10` remain open |
+| Product Owner | Fatihi | Approved with conditions | 2026-08-10 | MVP policies PP-01–PP-13 approved (`ADR-009`, `ADR-012`, `ADR-013`); browse boundary resolved (`ADR-014`); `PD-01`–`PD-10` resolved (`ADR-015`, `ADR-016`, `ADR-017`), closing `D6`–`D13` and the MVP portion of `D15`. `D14`, `D20` and hall/seat versioning remain open |
 | Project Manager | Open | Pending |  |  |
 | Business Analyst | Open | Pending |  |  |
 | Technical Lead | Open | Pending |  |  |

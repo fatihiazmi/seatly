@@ -60,7 +60,9 @@ Implementation notes: 13 findings. One was blocking — the CONFIRMED inventory
                      cancellations table. Browse-authentication contradiction
                      resolved by Product Owner decision, not by choosing one
                      side silently.
-Open decisions:      unchanged — D6–D15, D20, PD-01–PD-10, RULE-022–025
+Open decisions:      at the time of this item, D6–D15, D20, PD-01–PD-10 and
+                     RULE-022–025. All but D14, D20 and hall/seat versioning were
+                     closed later the same day by ADR-015/016/017.
 ```
 
 ### S0-02 — Scope and non-goal freeze
@@ -87,8 +89,9 @@ reconciliation outcomes for:
 - cancellation;
 - outbox delivery.
 
-Unapproved payment precedence, timeout, failure-release, and cancellation remedy
-transitions must be visibly marked `BLOCKED`.
+Payment precedence, timeout, failure-release and cancellation remedy transitions
+are Accepted as of 2026-08-10 (`ADR-015`, `ADR-016`, `ADR-017`) and are no longer
+marked `BLOCKED`. Any transition that is still unapproved must be.
 
 **Trace:** BR-14; FR-010/014/016/020–029/032–036; RULE-019–025; AC-005–011/013.
 
@@ -131,8 +134,13 @@ At minimum, reconcile or preserve blockers related to:
 - exact cancellation timezone boundary if not fully resolved by the accepted
   timezone baseline.
 
-`S0-01` has already recorded these in `BASELINE_RECONCILIATION.md` §7. `S0-06`
-tracks them from here; it does not re-derive them.
+`S0-01` recorded these in `BASELINE_RECONCILIATION.md` §7, and the review session
+of 2026-08-10 closed all but three. What `S0-06` still tracks:
+
+- `D14` — QR payload detail, privacy and rotation, before the `P5-03` QR slice;
+- hall and seat versioning after publication (`FR-038`, `FR-041`), before `C2-03`
+  implements destructive edit rules;
+- `D20` — named approvers per governance role, for the G0 multi-role sign-off.
 
 **Trace:** D6–D10, D13–D15; RULE-022–025; FR-019/021/025–027/032/036/038/041.
 
@@ -381,17 +389,29 @@ and the hold journey passes its keyboard-focused evidence.
 
 ## Phase 5 — Simulated payment and booking
 
-**Goal:** Implement asynchronous payment only after its policies are approved.  
+**Goal:** Implement asynchronous payment.  
 **Gate:** G4.  
-**Prerequisite:** Phase 3 passed; payment policy blockers resolved.
+**Prerequisite:** Phase 3 passed.  
+**Status:** Unblocked 2026-08-10 — `ADR-015` resolved every payment policy this
+phase depended on. See `SPRINT_0_REVIEW_DECISIONS.md` for the outcomes.
 
 ### P5-01 — Simulator contract and payment attempt
 
-Do not begin until callback schema, authentication, idempotency identity,
-timeout, contradictory-outcome precedence, and failure-release policy are
-Accepted.
+`READY`. Callback schema, authentication, idempotency identity, timeout,
+contradictory-outcome precedence and failure-release policy are all Accepted
+under `ADR-015`.
 
-**Trace:** FR-016–021/025/026; D6–D9; RULE-022–024.
+Implement to these guards specifically:
+
+- checkout is rejected within 60 seconds of `hold.expires_at`
+  (`HOLD_TOO_CLOSE_TO_EXPIRY`);
+- at most three attempts per hold (`PAYMENT_ATTEMPT_LIMIT_REACHED`);
+- an explicit failure leaves the hold `ACTIVE` until the third one;
+- the deadline is `hold.expires_at` — there is no `timeout_at` column;
+- `CREATED` at expiry becomes `FAILED`/`NEVER_SUBMITTED` with no case
+  (`PAY-05b`), `PENDING` becomes `TIMED_OUT` with one.
+
+**Trace:** FR-016–021/025/026; D6–D9 (closed); RULE-022–024; ADR-015.
 
 ### P5-02 — Callback authentication and inbox
 
@@ -409,10 +429,17 @@ currency, and coverage before committing one booking/reference/QR linkage.
 
 ### P5-04 — Late, duplicate, reordered, and lost-response behavior
 
-Test payment chaos and explicit reconciliation. Never reclaim a released seat
-after late success.
+`READY`. Test payment chaos and explicit reconciliation. Never reclaim a released
+seat after late success.
 
-**Trace:** FR-020/021/026–029; RULE-006/018/019; AC-006–010; EX-05–09/13.
+Precedence is fixed by `ADR-015`: the first valid final outcome committed in
+PostgreSQL wins, provider ordering is never authoritative, and a contradiction
+reverses nothing. Cases are rows in `reconciliation_cases`, not a status on
+`payments` — `PAY-13` and showtime cancellation both need a case while the
+payment stays `SUCCEEDED`. `PAY-11b` must reopen a closed `UNRESOLVED` case on a
+valid late success.
+
+**Trace:** FR-020/021/026–029; RULE-006/018/019/022/023/025; AC-006–010; EX-05–09/13; ADR-015.
 
 ### P5-05 — Transactional outbox and crash/replay
 
@@ -430,29 +457,45 @@ inventory transition, one reference, and one logical outbox effect.
 
 **Goal:** Complete secure customer and operator workflows.  
 **Gate:** G4/G5.  
-**Prerequisite:** Required cancellation and authority decisions Accepted.
+**Prerequisite:** Phase 3 passed.  
+**Status:** Unblocked 2026-08-10 — `ADR-016` fixed the cancellation boundary and
+`ADR-017` the roles, cancellation effects and authority.
 
 ### O6-01 — My Bookings, detail, and QR authorization
 
-Test Customer A, Customer B, unauthenticated, operator, and admin identities.
-Prevent protected-object disclosure.
+`READY`. Test Customer A, Customer B, unauthenticated, operator, and admin
+identities. Prevent protected-object disclosure.
+
+`OPERATOR` and `ADMIN` are genuinely different under `ADR-017`: an operator must
+be refused `showtimes.cancel`, `bookings.cancel`, and seat block/unblock. That
+negative case is the privilege-escalation half of the matrix.
 
 **Trace:** BR-08/11; FR-030/031; RULE-008; NFR-003; AC-012/018.
 
 ### O6-02 — Customer cancellation
 
-Use PostgreSQL time, stable duplicate outcomes, atomic booking transition, and
-seat resale only while the showtime remains on sale.
+`READY`. Use PostgreSQL time, stable duplicate outcomes, atomic booking
+transition, and seat resale only while the showtime remains on sale.
 
-**Trace:** FR-032–035; RULE-015/016/021; AC-013; EX-14.
+The cutoff comes from `bookings.cancellation_cutoff_minutes_snapshot`, never the
+live showtime value (`ADR-016`). Equality is ineligible — test at the boundary
+instant, one second either side, and with a booking whose snapshot differs from
+the showtime's current value.
+
+**Trace:** FR-032–035; RULE-015/016/021; AC-013; EX-14; ADR-016.
 
 ### O6-03 — Showtime cancellation race
 
-Race cancellation with hold, payment initiation, callback, confirmation,
+`READY`. Race cancellation with hold, payment initiation, callback, confirmation,
 expiry, and stale clients. No confirmation may begin after authoritative
 cancellation commits.
 
-**Trace:** FR-036/040/041; RULE-020/021; AC-011; EX-10.
+Per `ADR-017`: `ADMIN` only, `transaction_timestamp() < starts_at` or
+`SHOWTIME_ALREADY_STARTED`, an impact preview must be confirmed first, and the
+transaction opens exactly one `SHOWTIME_CANCELLED_REFUND_DUE` case per confirmed
+booking. Cancellation is terminal — assert that reopening is refused.
+
+**Trace:** FR-036/040/041; RULE-020/021/025; AC-011; EX-10; ADR-017.
 
 ### O6-04 — Audit and operational visibility
 

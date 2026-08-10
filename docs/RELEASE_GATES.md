@@ -28,6 +28,7 @@ Any reproducible occurrence below results in No-Go:
 - An ambiguous retry creates another hold, payment, booking, or cancellation.
 - Duplicate callback causes another state transition or side effect.
 - Paid booking becomes free inventory without reconciliation/refund state.
+- A reconciliation case is closed, dropped, or made unreachable while money is still owed.
 - Customer accesses another customer's hold, payment, booking, or PII.
 - Unauthorized admin cancellation or missing audit record.
 - Migration silently loses or remaps booking/inventory/payment data.
@@ -82,6 +83,9 @@ Inject:
 - invalid signature;
 - changed amount/currency;
 - late success after hold expiry;
+- late success after the 24-hour reconciliation window has closed;
+- a fourth checkout attempt on one hold;
+- checkout started inside the 60-second minimum window;
 - worker crash before/after local commit.
 
 One callback identity produces one logical effect. Illegal transitions fail without corrupting booking or inventory.
@@ -89,6 +93,8 @@ One callback identity produces one logical effect. Illegal transitions fail with
 ### Showtime cancellation race
 
 Race cancellation against new hold, payment initiation, callback, confirmation, expiry, and a stale client. No new confirmed booking may pass after cancellation obtains the showtime lock and commits.
+
+Also assert: an operator identity is refused the command; a showtime that has already started is refused with `SHOWTIME_ALREADY_STARTED`; an unconfirmed impact preview is refused; and the committed transaction opens exactly one `SHOWTIME_CANCELLED_REFUND_DUE` case per confirmed booking, no more and no fewer.
 
 ### Authorization and privacy
 

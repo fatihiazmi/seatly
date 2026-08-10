@@ -1,13 +1,13 @@
 <mxfile host="app.diagrams.net" agent="claude-code" version="24.7.17">
   <diagram name="Seatly State Machines" id="sm">
-    <mxGraphModel dx="2200" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="3980" pageHeight="2240" math="0" shadow="0">
+    <mxGraphModel dx="2200" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="3980" pageHeight="2660" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="t" value="Seatly — Authoritative State Machines  (DOMAIN_STATE_MODELS.md v1.1)" style="text;html=1;fontSize=26;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="80" y="40" width="2000" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="st" value="PostgreSQL commit order decides every race. Dashed amber transitions are gated on PD-01–PD-10 and must not be implemented before approval." style="text;html=1;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;" vertex="1" parent="1">
+        <mxCell id="st" value="PostgreSQL commit order decides every race. Dashed amber transitions are exception and reconciliation paths. PD-01–PD-10 resolved 2026-08-10 — ADR-015/016/017." style="text;html=1;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="80" y="80" width="3400" height="30" as="geometry" />
         </mxCell>
         <mxCell id="h_st" value="Showtime — §4" style="text;html=1;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
@@ -131,6 +131,25 @@ fingerprint is an idempotency conflict." style="text;html=1;align=left;verticalA
         <mxCell id="obx_dl" value="DEAD_LETTER" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="3400" y="1360" width="300" height="80" as="geometry" />
         </mxCell>
+        <mxCell id="h_rec" value="Reconciliation case — ADR-015" style="text;html=1;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="2020" y="1724" width="620" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="rec_op" value="OPEN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="2020" y="1780" width="300" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="rec_rs" value="RESOLVED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="2480" y="1780" width="300" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="rec_un" value="UNRESOLVED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="2940" y="1780" width="300" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="n_rec" value="Opened by PAY-05/06/08/09/11b/13 and by
+showtime cancellation. PAY-05b opens none —
+initiation was never sent, so nothing is
+ambiguous. Nothing in MVP resolves a case
+by hand; operator scope is inspection only." style="text;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#f5f5f5;strokeColor=#999999;fontSize=12;dashed=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="3400" y="1770" width="380" height="130" as="geometry" />
+        </mxCell>
         <mxCell id="n_lock" value="Global lock order — every competing action uses it
 
   1. showtime row
@@ -142,19 +161,19 @@ fingerprint is an idempotency conflict." style="text;html=1;align=left;verticalA
 Never acquire the showtime lock after a seat, hold, payment or booking lock.
 Retry the whole transaction on deadlock, never a partial mutation, and never
 under a new command identity." style="text;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;dashed=1;rounded=1;" vertex="1" parent="1">
-          <mxGeometry x="80" y="1780" width="1680" height="260" as="geometry" />
+          <mxGeometry x="80" y="2200" width="1680" height="260" as="geometry" />
         </mxCell>
         <mxCell id="n_key" value="Reading this diagram
 
   white box      non-terminal state
   green box      terminal state
-  solid arrow    transition supported by the approved baseline
-  dashed amber   transition gated on PD-01–PD-10; not implementable yet
+  solid arrow    normal path
+  dashed amber   exception, cancellation or reconciliation path
 
 A worker tick, HTTP request or callback receipt is only a request to attempt
 a transition — never proof that it is still eligible. Guards are re-evaluated
 after locks are held, using PostgreSQL time." style="text;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#f5f5f5;strokeColor=#999999;fontSize=12;dashed=1;rounded=1;" vertex="1" parent="1">
-          <mxGeometry x="2020" y="1780" width="1680" height="260" as="geometry" />
+          <mxGeometry x="2020" y="2200" width="1680" height="260" as="geometry" />
         </mxCell>
         <mxCell id="sme0" value="ST-03 publish → materialise inventory" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="st_draft" target="st_pub">
           <mxGeometry relative="1" x="-0.6" as="geometry">
@@ -162,7 +181,8 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme1" value="ST-04 cancel (PD-08/09)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="st_pub" target="st_can">
+        <mxCell id="sme1" value="ST-04 cancel — ADMIN, db_now &lt; starts_at,
+impact preview confirmed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="st_pub" target="st_can">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
             </Array>
@@ -258,7 +278,8 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme12" value="HLD-04/05/06 abandon, payment failure, showtime cancel" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="hld_ac" target="hld_rl">
+        <mxCell id="sme12" value="HLD-04/06 abandon or showtime cancel;
+HLD-05 third payment failure only" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="hld_ac" target="hld_rl">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="460" y="1120" />
@@ -268,7 +289,7 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme13" value="BKG-02 owner + cutoff (PD-07)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="bkg_cf" target="bkg_cc">
+        <mxCell id="sme13" value="BKG-02 owner + snapshotted cutoff" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="bkg_cf" target="bkg_cc">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="500" y="1500" />
@@ -276,7 +297,7 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme14" value="BKG-03 authorised policy (D15/PD-08)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="bkg_cf" target="bkg_ac">
+        <mxCell id="sme14" value="BKG-03 ADMIN, bookings.cancel" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="bkg_cf" target="bkg_ac">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="480" y="1520" />
@@ -286,7 +307,7 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme15" value="BKG-04 showtime cancellation (PD-09)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="bkg_cf" target="bkg_sc">
+        <mxCell id="sme15" value="BKG-04 showtime cancellation" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="bkg_cf" target="bkg_sc">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="460" y="1540" />
@@ -308,7 +329,8 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme18" value="PAY-04 valid failure (PD-06)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.25;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_pd" target="pay_fl">
+        <mxCell id="sme18" value="PAY-04 valid failure — hold survives
+unless this is the third" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.25;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_pd" target="pay_fl">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="2900" y="280" />
@@ -318,7 +340,7 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme19" value="PAY-05 deadline (PD-01/02)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.3333;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5333;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_pd" target="pay_to">
+        <mxCell id="sme19" value="PAY-05 hold expiry, no final callback" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.3333;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5333;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_pd" target="pay_to">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="2580" y="340" />
@@ -346,23 +368,43 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme22" value="PAY-07 late failure" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.75;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_to" target="pay_fl">
+        <mxCell id="sme22" value="PAY-05b expiry, never submitted — no case" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.4667;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.2667;entryY=1.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_cr" target="pay_fl">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="2160" y="340" />
+              <mxPoint x="3480" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sme23" value="PAY-11b late success reopens the case" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_un" target="pay_ls">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="2440" y="560" />
+              <mxPoint x="2440" y="660" />
+              <mxPoint x="3340" y="660" />
+              <mxPoint x="3340" y="580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sme24" value="PAY-07 late failure" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.75;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_to" target="pay_fl">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="2900" y="560" />
-              <mxPoint x="2900" y="340" />
-              <mxPoint x="3360" y="340" />
+              <mxPoint x="2900" y="360" />
+              <mxPoint x="3360" y="360" />
               <mxPoint x="3360" y="280" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme23" value="PAY-11 window closes (PD-03)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_to" target="pay_un">
+        <mxCell id="sme25" value="PAY-11 24h window closes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0;entryY=0.75;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_to" target="pay_un">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
+              <mxPoint x="2360" y="580" />
+              <mxPoint x="2360" y="600" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme24" value="PAY-09 valid success" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.75;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_rc" target="pay_ls">
+        <mxCell id="sme26" value="PAY-09 valid success" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.75;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_rc" target="pay_ls">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="3360" y="580" />
@@ -370,26 +412,26 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme25" value="PAY-10 valid failure" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.6667;exitY=0.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.3333;entryY=1.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_rc" target="pay_fl">
+        <mxCell id="sme27" value="PAY-10 valid failure" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.6667;exitY=0.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5333;entryY=1.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_rc" target="pay_fl">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="3140" y="500" />
-              <mxPoint x="3140" y="360" />
-              <mxPoint x="3500" y="360" />
-              <mxPoint x="3500" y="340" />
+              <mxPoint x="3140" y="380" />
+              <mxPoint x="3560" y="380" />
+              <mxPoint x="3560" y="340" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme26" value="PAY-14 later success — never a booking" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.6667;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5333;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_fl" target="pay_ls">
+        <mxCell id="sme28" value="PAY-14 later success — never a booking" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.7333;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5333;entryY=0.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_fl" target="pay_ls">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
-              <mxPoint x="3600" y="340" />
-              <mxPoint x="3600" y="500" />
+              <mxPoint x="3620" y="340" />
+              <mxPoint x="3620" y="500" />
               <mxPoint x="3560" y="500" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme27" value="PAY-13 later failure recorded; booking stands" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.75;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="pay_sc" target="pay_sc">
+        <mxCell id="sme29" value="PAY-13 later failure recorded; booking stands" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.75;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="pay_sc" target="pay_sc">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="2900" y="260" />
@@ -397,13 +439,13 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme28" value="CAN-02 eligible; target transition commits" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.25;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="can_rq" target="can_ap">
+        <mxCell id="sme30" value="CAN-02 eligible; target transition commits" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.25;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="can_rq" target="can_ap">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme29" value="CAN-03 ineligible or unauthorised" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.25;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="can_rq" target="can_rj">
+        <mxCell id="sme31" value="CAN-03 ineligible or unauthorised" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.25;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="can_rq" target="can_rj">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="2440" y="1000" />
@@ -413,7 +455,7 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme30" value="CAN-04 retry returns original" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.75;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="can_ap" target="can_ap">
+        <mxCell id="sme32" value="CAN-04 retry returns original" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.75;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="can_ap" target="can_ap">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="2440" y="980" />
@@ -421,7 +463,7 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme31" value="CAN-05 retry returns original" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.75;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="can_rj" target="can_rj">
+        <mxCell id="sme33" value="CAN-05 retry returns original" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.75;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="can_rj" target="can_rj">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="2900" y="980" />
@@ -429,13 +471,13 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme32" value="OBX-02 claim lease, SKIP LOCKED" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="obx_pd" target="obx_dg">
+        <mxCell id="sme34" value="OBX-02 claim lease, SKIP LOCKED" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="obx_pd" target="obx_dg">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme33" value="OBX-03 destination acknowledges" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="obx_dg" target="obx_dv">
+        <mxCell id="sme35" value="OBX-03 destination acknowledges" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="obx_dg" target="obx_dv">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="2900" y="1380" />
@@ -443,7 +485,7 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme34" value="OBX-04/05 retry or lease expiry" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.5333;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.3333;entryY=1.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="obx_dg" target="obx_pd">
+        <mxCell id="sme36" value="OBX-04/05 retry or lease expiry" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.5333;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.3333;entryY=1.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="obx_dg" target="obx_pd">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="2640" y="1480" />
@@ -451,7 +493,7 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme35" value="OBX-06 exhausted or non-retryable" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="obx_dg" target="obx_dl">
+        <mxCell id="sme37" value="OBX-06 exhausted or non-retryable" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="obx_dg" target="obx_dl">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="2900" y="1420" />
@@ -461,13 +503,39 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme36" value="OBX-07 audited replay" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.5333;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.6667;entryY=1.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="obx_dl" target="obx_pd">
+        <mxCell id="sme38" value="OBX-07 audited replay" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.5333;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.6667;entryY=1.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="obx_dl" target="obx_pd">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="3560" y="1480" />
               <mxPoint x="3560" y="1500" />
               <mxPoint x="2220" y="1500" />
               <mxPoint x="2220" y="1480" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sme39" value="a valid final outcome arrives" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="rec_op" target="rec_rs">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="2440" y="1800" />
+              <mxPoint x="2440" y="1820" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sme40" value="24h closure job" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="rec_op" target="rec_un">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="2440" y="1840" />
+              <mxPoint x="2440" y="1880" />
+              <mxPoint x="2900" y="1880" />
+              <mxPoint x="2900" y="1820" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sme41" value="PAY-11b late success reopens" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=0.4667;exitY=1.0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.4667;entryY=1.0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="rec_un" target="rec_op">
+          <mxGeometry relative="1" x="-0.6" as="geometry">
+            <Array as="points">
+              <mxPoint x="3080" y="1900" />
+              <mxPoint x="2160" y="1900" />
             </Array>
           </mxGeometry>
         </mxCell>

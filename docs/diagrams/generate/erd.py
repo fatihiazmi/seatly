@@ -20,14 +20,14 @@ MONEY = ("#e1d5e7", "#9673a6")   # payments, bookings
 RELBL = ("#f8cecc", "#b85450")   # reliability and traceability
 
 COL = [80, 780, 1480, 2180]
-ROW = [140, 640, 1140, 1640, 2140]
+ROW = [140, 640, 1140, 1640, 2140, 2640]
 
 p = Page("Seatly Logical ERD", "erd")
 p.free_text("t", (80, 40), 1600, 40,
             "Seatly — Logical ERD  (LOGICAL_ERD.md v1.1)")
 p.free_text("st", (80, 80), 2400, 30,
             "PostgreSQL authoritative · timestamptz in UTC · MYR integer sen · "
-            "reconciled 2026-08-10 (RC-02 … RC-08)", fs=13, bold=False)
+            "RC-02…RC-08 and ADR-015/016/017 applied 2026-08-10", fs=13, bold=False)
 
 # ---- row 0 : identity ------------------------------------------------------
 p.table("users", "users", (COL[0], ROW[0]), IDENT, [
@@ -44,7 +44,7 @@ p.table("role_user", "role_user", (COL[1], ROW[0]), IDENT, [
 p.table("roles", "roles", (COL[2], ROW[0]), IDENT, [
     "PK  id : smallint",
     "UQ  code : CUSTOMER|OPERATOR|ADMIN",
-    "    name",
+    "    ADMIN adds cancel + block/unblock",
 ])
 p.table("idempotency_keys", "idempotency_keys", (COL[3], ROW[0]), RELBL, [
     "PK  id : bigint",
@@ -99,6 +99,7 @@ p.table("showtimes", "showtimes", (COL[1], ROW[2]), INVEN, [
     "    status : DRAFT|PUBLISHED|CANCELLED",
     "    starts_at / ends_at : timestamptz",
     "    price_minor : bigint / currency",
+    "    cancellation_cutoff_minutes : 120",
     "EXCL  no overlap per hall (PUBLISHED)",
     "    version : integer",
 ])
@@ -145,6 +146,7 @@ p.table("payments", "payments", (COL[2], ROW[3]), MONEY, [
     "FK  hold_id",
     "UQ  (hold_id, attempt_number)",
     "UQ  (provider, provider_payment_id)",
+    "CK  attempt_number between 1 and 3",
     "    status : 8 values — see ERD 2.5",
     "    amount_minor / currency",
     "    reconciliation_reason_code",
@@ -168,6 +170,7 @@ p.table("bookings", "bookings", (COL[0], ROW[4]), MONEY, [
     "FK  user_id / showtime_id",
     "    status : CONFIRMED|CUSTOMER_CANCELLED|",
     "             ADMIN_CANCELLED|SHOWTIME_CANCELLED",
+    "    cancellation_cutoff_minutes_snapshot",
     "    immutable snapshots + qr_token_hash",
 ])
 p.table("booking_items", "booking_items", (COL[1], ROW[4]), MONEY, [
@@ -197,6 +200,17 @@ p.table("audit_events", "audit_events", (COL[3], ROW[4]), RELBL, [
     "    append-only, 180-day retention",
 ])
 
+p.table("reconciliation_cases", "reconciliation_cases", (COL[0], ROW[5]), RELBL, [
+    "PK  id : bigint",
+    "UQ  public_id : uuid",
+    "FK  payment_id   (nullable)",
+    "FK  booking_id   (nullable)",
+    "CK  at least one target present",
+    "    state : OPEN|RESOLVED|UNRESOLVED",
+    "    reason_code / opened_at / closed_at",
+    "UQ  one OPEN case per payment",
+])
+
 ONE, MANY, ZOM = "ERmandOne", "ERoneToMany", "ERzeroToMany"
 
 for child, parent, sa, ea, label in [
@@ -222,6 +236,8 @@ for child, parent, sa, ea, label in [
     ("booking_items", "showtime_seats", MANY, ONE, "snapshot of"),
     ("cancellations", "bookings", ZOM, ONE, "targets booking"),
     ("cancellations", "showtimes", ZOM, ONE, "targets showtime"),
+    ("reconciliation_cases", "payments", ZOM, ONE, "money in doubt"),
+    ("reconciliation_cases", "bookings", ZOM, ONE, "refund owed"),
 ]:
     p.edge(child, parent, sa, ea, label)
 
@@ -229,7 +245,7 @@ for child, parent, sa, ea, label in [
 p.edge("seat_companion_links", "seats", ZOM, ONE, "companion side",
        colour="#82b366")
 
-p.note("legend", (80, 2620), 2440, 230,
+p.note("legend", (80, 3140), 2440, 250,
        "Reading this diagram\n\n"
        "• showtime_seats is the only current seat-allocation authority. hold_id and booking_id "
        "name the CURRENT owner: confirmation clears hold_id, blocking clears both (RC-02).\n"
@@ -240,6 +256,11 @@ p.note("legend", (80, 2620), 2440, 230,
        "even when it cannot change the payment.\n"
        "• cancellations covers customer, admin and showtime cancellation in one idempotent decision "
        "record (RC-06).\n"
+       "• reconciliation_cases is the only place a money problem can live when the payment is "
+       "and must stay SUCCEEDED — a contradicted success, or a booking killed by showtime "
+       "cancellation.\n"
+       "• The cancellation cutoff is snapshotted onto the booking, so changing the policy cannot "
+       "re-term a booking already sold.\n"
        "• Not drawn, to keep the graph legible: users ← cancellations.requested_by_user_id and "
        "users ← audit_events.actor_user_id, both ON DELETE SET NULL.\n"
        "• Laravel jobs / failed_jobs are infrastructure tables and are out of the logical model.",

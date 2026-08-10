@@ -1,12 +1,14 @@
 # Seatly Sprint 0 Domain State Models and Transition Specification
 
 **Document ID:** SEATLY-DOMAIN-STATES-001  
-**Version:** 1.1  
+**Version:** 1.2  
 **Date:** 2026-08-10  
-**Status:** Draft for Sprint 0 approval  
-**Change note:** v1.1 applies `RC-02`, `RC-06`, and `RC-07` from
-[`BASELINE_RECONCILIATION.md`](BASELINE_RECONCILIATION.md). `PD-01`–`PD-10`
-remain **Proposed**; nothing in v1.1 approves them.  
+**Status:** Approved for implementation  
+**Change note:** v1.1 applied `RC-02`, `RC-06`, and `RC-07` from
+[`BASELINE_RECONCILIATION.md`](BASELINE_RECONCILIATION.md). v1.2 records the
+Product Owner's resolution of `PD-01`–`PD-10` — see `ADR-015`, `ADR-016`,
+`ADR-017` in [`DECISIONS.md`](DECISIONS.md). Transitions previously marked gated
+are now implementable.  
 **Scope:** Showtime, seat inventory, hold, payment attempt, booking, cancellation, reconciliation, and transactional outbox  
 **System of record:** PostgreSQL  
 **Related artifacts:** `BRD.md`, `PROJECT_BRIEF.md`, `DECISIONS.md`, `DELIVERY_TIMELINE.md`, `RELEASE_GATES.md`, `MVP_POLICY_BASELINE.md`, `bpmn/seatly-booking-process.bpmn`
@@ -38,24 +40,29 @@ Seatly is greenfield. There is no incumbent state model to preserve.
 11. Outbox delivery is at least once; consumers shall be idempotent.
 12. No notification or real refund behavior is implied by an outbox event or reconciliation state.
 
-## 2. Proposed gated defaults
+## 2. Resolved defaults
 
-The following defaults are intentionally small and explicit. They remain **Proposed** until recorded in `DECISIONS.md`.
+`PD-01`–`PD-10` were resolved by the Product Owner on 2026-08-10 and recorded as
+`ADR-015`, `ADR-016` and `ADR-017` in [`DECISIONS.md`](DECISIONS.md). Nothing in
+this document is gated any longer.
 
-| ID | Proposed default | Rationale |
+| ID | Outcome | Substance as implemented |
 |---|---|---|
-| PD-01 | A payment attempt’s initial callback deadline is the hold’s existing `expires_at`; do not introduce a second customer-facing payment timer for MVP. | Reuses the approved five-minute authoritative hold deadline and avoids conflicting timeout clocks. |
-| PD-02 | If no final callback has committed by `hold.expires_at`, set the attempt to `TIMED_OUT`, expire the hold, and open reconciliation. Timeout is not provider failure. | Preserves ambiguous outcomes and safely releases scarce inventory. |
-| PD-03 | Keep timed-out/reconciliation attempts inspectable for 24 hours after timeout before automatic operational closure as `UNRESOLVED`. A later callback is still stored after closure but cannot automatically confirm. | Gives the simulator and operator flow a bounded portfolio demonstration window. |
-| PD-04 | First valid final provider outcome committed in PostgreSQL wins the normal business effect. Timeout does not count as a final provider outcome. | Deterministic and independent of provider timestamps or delivery order. |
-| PD-05 | A later contradictory callback never reverses a committed booking, cancellation, inventory release, or earlier final outcome. It is recorded and opens/updates reconciliation. | Prevents externally supplied ordering from rewriting authoritative state. |
-| PD-06 | A valid explicit payment failure immediately releases the active hold in the same transaction, provided the showtime remains on sale. | Minimizes unnecessary inventory blockage. |
-| PD-07 | Customer cancellation is allowed only when PostgreSQL `transaction_timestamp() < scheduled_start_at - interval '2 hours'`; equality is ineligible. Instants are stored in UTC. | Gives the approved “until two hours before” rule an exact boundary. |
-| PD-08 | For MVP, one authorized `admin` capability may cancel a showtime; a non-empty reason and audit record are mandatory. No separate operator hierarchy or approval chain is introduced. | Smallest authority model consistent with the accepted admin scope. |
-| PD-09 | Showtime cancellation releases active holds, blocks unsold seats, prevents new payment initiation and confirmation, marks confirmed bookings `SHOWTIME_CANCELLED`, revokes QR use, and creates reconciliation cases for confirmed or payment-ambiguous journeys. No real refund or notification is performed. | Makes all affected states visible without inventing excluded integrations. |
-| PD-10 | Showtime cancellation is terminal in MVP. Rescheduling, reopening, and “uncancel” are forbidden; create a new showtime instead. | Avoids restoring stale holds, inventory, prices, or payment intent. |
+| PD-01 | Accepted, amended | Deadline is the hold's `expires_at`; no second timer and no `timeout_at` column. `PAY-01` additionally rejects checkout unless `transaction_timestamp() < expires_at - interval '60 seconds'`, returning `HOLD_TOO_CLOSE_TO_EXPIRY`. |
+| PD-02 | Accepted, extended | `PENDING` at hold expiry → `TIMED_OUT`, hold expires, case opens. New `PAY-05b`: `CREATED` at hold expiry → `FAILED` reason `NEVER_SUBMITTED`, **no** case — initiation never left the system. |
+| PD-03 | Accepted, extended | 24-hour window, then `UNRESOLVED`. New `PAY-11b`: `UNRESOLVED` plus a valid late success → `LATE_SUCCESS_REFUND_REQUIRED`, reopening the case. Closure stops the clock; it does not seal the record. |
+| PD-04 | Accepted as written | First valid final outcome committed in PostgreSQL wins. Provider timestamps and sequence claims are recorded, never authoritative. |
+| PD-05 | Accepted, new record | Contradictions never reverse committed state. Cases live in a `reconciliation_cases` table — the third record type §7.1 requires — because `PAY-13` and showtime cancellation both need a case that outlives a `SUCCEEDED` payment. |
+| PD-06 | **Amended** | Explicit failure sets the attempt `FAILED` but leaves the hold `ACTIVE`. Up to three attempts per hold until `expires_at`; the third failure releases with reason `PAYMENT_FAILED`. |
+| PD-07 | Accepted, source amended | Boundary and strict inequality as drafted. The interval is not a literal: it reads `bookings.cancellation_cutoff_minutes_snapshot`, taken from `showtimes.cancellation_cutoff_minutes` (default 120) at confirmation. |
+| PD-08 | Accepted, split named | `ADMIN` holds `showtimes.cancel`, `bookings.cancel` and seat block/unblock. `OPERATOR` holds catalogue, showtime CRUD and all inspection. No approval chain. |
+| PD-09 | **Amended** | `ST-04` additionally requires `transaction_timestamp() < starts_at`. "Where needed" replaced by one case per confirmed booking, reason `SHOWTIME_CANCELLED_REFUND_DUE`, plus one per payment-ambiguous attempt. |
+| PD-10 | Accepted, control added | Terminal as drafted. The cancel command is two-step: an impact preview returning affected counts, then confirmation quoting the showtime reference. |
 
-Approval of these defaults resolves BRD decisions D7–D10, D13, and the MVP portion of D15. Until approval, implementation slices depending on them remain gated.
+Four latent defects were found while resolving these and are fixed below: `CREATED`
+had no exit at hold expiry, `UNRESOLVED` had no exit at all, `reconciliation_cases`
+was required by §7.1 and missing from the schema, and `payments.attempt_number` was
+unreachable while PD-06 released the hold on first failure.
 
 ## 3. Common state-machine rules
 
@@ -87,11 +94,12 @@ expired when transaction_timestamp() >= expires_at
 
 Therefore, confirmation exactly at `expires_at` is forbidden.
 
-For customer cancellation under proposed PD-07:
+For customer cancellation under `ADR-016`, where the cutoff is the value snapshotted on the booking:
 
 ```text
 eligible when transaction_timestamp()
-              < scheduled_start_at - interval '2 hours'
+              < scheduled_start_at
+                - (cancellation_cutoff_minutes_snapshot * interval '1 minute')
 ```
 
 The showtime instant is stored in UTC. Venue-facing display and policy explanations use `Asia/Kuala_Lumpur`.
@@ -135,7 +143,7 @@ A past `PUBLISHED` showtime is not bookable even if a cleanup or completion job 
 | ST-01 | — | Create showtime | `DRAFT` | Authorized admin; valid movie, venue, hall, start time, price and currency | Insert showtime; audit `SHOWTIME_CREATED` |
 | ST-02 | `DRAFT` | Edit showtime | `DRAFT` | Authorized; valid proposed data; no publication has occurred | Update allowed fields/version; audit |
 | ST-03 | `DRAFT` | Publish | `PUBLISHED` | Authorized; movie/venue/hall active; fixed layout valid; companion links valid; no conflicting hall schedule; one price and `MYR`; future start | Materialize exactly one inventory row per active physical seat; snapshot seat identity/features and price; outbox `SHOWTIME_PUBLISHED`; audit |
-| ST-04 | `PUBLISHED` | Cancel showtime | `CANCELLED` | Authorized under approved authority; non-empty reason; command idempotency valid | Apply Section 10 cancellation effects; outbox `SHOWTIME_CANCELLED`; audit |
+| ST-04 | `PUBLISHED` | Cancel showtime | `CANCELLED` | Caller holds `showtimes.cancel` (`ADMIN`); non-empty reason code; `transaction_timestamp() < starts_at`; impact preview confirmed; command idempotency valid | Apply Section 10 cancellation effects; outbox `SHOWTIME_CANCELLED`; audit |
 | ST-05 | `CANCELLED` | Repeat same cancellation | `CANCELLED` | Same logical command or already cancelled | Return existing cancellation result; no repeated effects |
 | ST-06 | `DRAFT` | Delete draft | — | Authorized; never published; no inventory, hold, payment, or booking references | Delete or soft-delete according to persistence convention; audit |
 
@@ -144,6 +152,9 @@ A past `PUBLISHED` showtime is not bookable even if a cleanup or completion job 
 - `PUBLISHED -> DRAFT`
 - `CANCELLED -> PUBLISHED`
 - `CANCELLED -> DRAFT`
+- cancelling a showtime that has already started (`ST-04` guard, `ADR-017`) —
+  there is no stored `ENDED` state, so `PUBLISHED` alone does not mean "still to
+  come". Retroactively voiding a failed screening is a separate post-MVP command.
 - physical hall/seat reassignment after publication
 - structural hall edits that change a published showtime’s materialized seat meaning
 - changing the price snapshot used by an existing hold, payment, or booking
@@ -221,8 +232,8 @@ Recommended `release_reason` values:
 
 ```text
 CUSTOMER_ABANDONED
-PAYMENT_FAILED          # Proposed PD-06
-SHOWTIME_CANCELLED      # Proposed PD-09
+PAYMENT_FAILED          # third failed attempt only — ADR-015
+SHOWTIME_CANCELLED      # ADR-017
 ADMINISTRATIVE_RELEASE
 ```
 
@@ -252,7 +263,7 @@ No hold record or hold item shall survive an unsuccessful all-or-none acquisitio
 | HLD-02 | `ACTIVE` | Confirm booking | `CONFIRMED` | `db_now < expires_at`; showtime on sale; valid effective payment success; exact inventory coverage; no cancellation has committed | Create booking atomically; all inventory `HELD -> CONFIRMED`; outbox; audit |
 | HLD-03 | `ACTIVE` | Expiry detected inline or by worker | `EXPIRED` | `db_now >= expires_at`; no booking confirmation committed | Release all held inventory to `AVAILABLE` or `BLOCKED` according to showtime state; outbox `HOLD_EXPIRED`; audit |
 | HLD-04 | `ACTIVE` | Customer abandons/release command | `RELEASED` | Owner authorized; no confirmation; showtime/inventory revalidated | Release all seats; reason `CUSTOMER_ABANDONED`; outbox/audit |
-| HLD-05 | `ACTIVE` | Valid explicit payment failure | `RELEASED` | Proposed PD-06; failure wins transition before confirmation | Release all seats; reason `PAYMENT_FAILED`; payment `FAILED`; outbox/audit |
+| HLD-05 | `ACTIVE` | Valid explicit payment failure | `ACTIVE` or `RELEASED` | `ADR-015`: the hold stays `ACTIVE` while fewer than three attempts have failed, so the customer may retry until `expires_at`; the third failure releases it | Payment `FAILED`. On the third failure only: release all seats, reason `PAYMENT_FAILED`, outbox/audit |
 | HLD-06 | `ACTIVE` | Showtime cancellation | `RELEASED` | Cancellation has showtime lock | Release/block all seats; reason `SHOWTIME_CANCELLED`; outbox/audit |
 | HLD-07 | Any terminal | Repeat expiry/release/confirm command | Unchanged | Same logical command or state already terminal | Return current state/result; no repeated effects |
 
@@ -291,7 +302,7 @@ A callback record shall never be discarded because it cannot change the payment 
 | `TIMED_OUT` | No final callback committed by the authoritative deadline; outcome remains unknown. | No |
 | `RECONCILIATION_REQUIRED` | Attempt is ambiguous, contradictory, cancelled-showtime affected, or otherwise requires explicit inspection. | No |
 | `LATE_SUCCESS_REFUND_REQUIRED` | Valid success arrived after confirmation became impossible; no booking was created or reclaimed. | Yes for automatic booking |
-| `UNRESOLVED` | Proposed operational closure reached without an authoritative provider outcome. | Operational terminal; later callbacks still recorded |
+| `UNRESOLVED` | The 24-hour window closed without an authoritative provider outcome. | Operational only. A valid late success still reopens it through `PAY-11b` |
 
 `REFUND_REQUIRED` is a classification only. Real refund execution is out of scope.
 
@@ -327,25 +338,27 @@ The unique provider event ID prevents repeated processing. Reusing the same even
 
 | ID | From | Trigger | To | Guards | Atomic effects |
 |---|---|---|---|---|---|
-| PAY-01 | — | Initiate checkout | `CREATED` | Owned active hold; `db_now < expires_at`; showtime on sale; snapshot valid; scoped idempotency valid | Create/recover one attempt bound to hold/snapshot/amount/currency; create payment-initiation outbox event |
+| PAY-01 | — | Initiate checkout | `CREATED` | Owned active hold; `db_now < expires_at - interval '60 seconds'` else `HOLD_TOO_CLOSE_TO_EXPIRY`; fewer than three failed attempts on this hold else `PAYMENT_ATTEMPT_LIMIT_REACHED`; showtime on sale; snapshot valid; scoped idempotency valid | Create/recover one attempt bound to hold/snapshot/amount/currency, at the next `attempt_number`; create payment-initiation outbox event |
 | PAY-02 | `CREATED` | Initiation durably queued/sent | `PENDING` | Same logical attempt; no terminal outcome already committed | Record submission/correlation timestamps; no booking effect |
 | PAY-03 | `PENDING` | Valid success callback | `SUCCEEDED` | First valid final outcome; hold active/unexpired; showtime on sale; exact amount/currency; inventory still linked to hold | In one transaction: callback accepted, hold confirmed, booking/reference/QR created, inventory confirmed, outbox/audit written |
-| PAY-04 | `PENDING` | Valid explicit failure | `FAILED` | First valid final outcome | Record failure; under PD-06 release active hold/inventory in same transaction; outbox/audit |
-| PAY-05 | `PENDING` | Deadline reached without final outcome | `TIMED_OUT` | Proposed PD-01/02; `db_now >= timeout_at`; no final callback committed | Expire hold if still active; release/block inventory; create reconciliation case; outbox/audit |
+| PAY-04 | `PENDING` | Valid explicit failure | `FAILED` | First valid final outcome for this attempt | Record failure. Hold stays `ACTIVE` for a further attempt unless this is the third failure, in which case release it (`HLD-05`); outbox/audit |
+| PAY-05 | `PENDING` | Deadline reached without final outcome | `TIMED_OUT` | `db_now >= hold.expires_at`; no final callback committed | Expire hold if still active; release/block inventory; open reconciliation case; outbox/audit |
+| PAY-05b | `CREATED` | Deadline reached without durable submission | `FAILED` | `db_now >= hold.expires_at`; initiation was never durably sent | Record reason `NEVER_SUBMITTED`; expire hold if still active; **no** reconciliation case — nothing left the system, so nothing is ambiguous; audit |
 | PAY-06 | `TIMED_OUT` | Valid late success | `LATE_SUCCESS_REFUND_REQUIRED` | No booking committed; hold expired/released or showtime unbookable | Record paid-but-unbooked result; never reacquire inventory; open/update reconciliation |
 | PAY-07 | `TIMED_OUT` | Valid late failure | `FAILED` | No contradictory earlier provider final; no booking | Record final failure; resolve case as no booking/no simulated refund |
 | PAY-08 | `CREATED`/`PENDING`/`TIMED_OUT` | Showtime cancellation | `RECONCILIATION_REQUIRED` | No booking confirmation committed before cancellation | Mark confirmation blocked by showtime; release hold; create/update case |
 | PAY-09 | `RECONCILIATION_REQUIRED` | Valid success | `LATE_SUCCESS_REFUND_REQUIRED` | Confirmation is blocked by expiry/cancellation/release | No inventory or booking mutation; update case |
 | PAY-10 | `RECONCILIATION_REQUIRED` | Valid failure | `FAILED` | No committed booking or prior accepted success | Record failure; resolve or update case |
-| PAY-11 | `TIMED_OUT`/`RECONCILIATION_REQUIRED` | Reconciliation window closes | `UNRESOLVED` | Proposed PD-03; no accepted final result | Preserve inspectable history; alert/report unresolved case |
+| PAY-11 | `TIMED_OUT`/`RECONCILIATION_REQUIRED` | Reconciliation window closes 24h after timeout | `UNRESOLVED` | No accepted final result | Preserve inspectable history; case state `UNRESOLVED`; alert/report |
+| PAY-11b | `UNRESOLVED` | Valid late success after closure | `LATE_SUCCESS_REFUND_REQUIRED` | No booking committed; confirmation impossible | Reopen the reconciliation case; record paid-but-unbooked; never reacquire inventory or create a booking |
 | PAY-12 | Any | Duplicate identical callback | Unchanged | Same provider event ID and payload fingerprint, or semantically duplicate final outcome | Store/return duplicate disposition; no repeated business effect |
 | PAY-13 | `SUCCEEDED` | Later failure callback | `SUCCEEDED` | Booking already committed | Record contradiction; do not cancel booking; create/update reconciliation |
 | PAY-14 | `FAILED` | Later success callback | `LATE_SUCCESS_REFUND_REQUIRED` | Hold released or no longer confirmable | Record contradiction/late success; no booking; create/update reconciliation |
 | PAY-15 | Any | Invalid or untrusted callback | Unchanged | Signature, structure, correlation, amount, or currency validation fails | Store rejected callback disposition; no payment/booking/inventory mutation; audit/security metric |
 
-### 7.5 Proposed contradictory-outcome precedence
+### 7.5 Contradictory-outcome precedence
 
-Under PD-04/05:
+Accepted under `ADR-015`:
 
 1. A committed `SUCCEEDED` booking effect is irrevocable by later provider messages.
 2. The first authenticated, structurally valid, correctly correlated final provider callback committed by Seatly wins the normal provider outcome.
@@ -371,7 +384,7 @@ Under PD-04/05:
 - accepting a callback with invalid authentication/correlation/binding
 - reclaiming inventory during reconciliation
 
-The apparent `FAILED -> LATE_SUCCESS_REFUND_REQUIRED` transition is exception classification, not reversal to successful booking.
+The apparent `FAILED -> LATE_SUCCESS_REFUND_REQUIRED` transition is exception classification, not reversal to successful booking. `UNRESOLVED -> LATE_SUCCESS_REFUND_REQUIRED` (`PAY-11b`) is the same kind of reclassification: it records that money moved and a refund is owed, and still creates no booking and touches no inventory.
 
 ## 8. Booking state model
 
@@ -406,9 +419,9 @@ A confirmed booking shall have:
 | ID | From | Trigger | To | Guards | Atomic effects |
 |---|---|---|---|---|---|
 | BKG-01 | — | Confirm from valid payment success | `CONFIRMED` | All PAY-03 guards; unique hold/payment; all seats still held | Create booking/items/reference/QR linkage; hold `CONFIRMED`; inventory all `CONFIRMED`; payment `SUCCEEDED`; outbox/audit |
-| BKG-02 | `CONFIRMED` | Customer cancellation | `CUSTOMER_CANCELLED` | Owner; whole booking; proposed exact cutoff passes; showtime on sale; no earlier cancellation | Revoke QR; release all seats to `AVAILABLE`; create applied cancellation; outbox/audit |
-| BKG-03 | `CONFIRMED` | Admin booking cancellation | `ADMIN_CANCELLED` | Authorized capability and reason; policy approved | Revoke QR; release or block inventory according to showtime; reconciliation if payment remedy needed; outbox/audit |
-| BKG-04 | `CONFIRMED` | Showtime cancellation | `SHOWTIME_CANCELLED` | Showtime cancellation wins showtime lock | Revoke QR; block inventory; create reconciliation case under PD-09; outbox/audit |
+| BKG-02 | `CONFIRMED` | Customer cancellation | `CUSTOMER_CANCELLED` | Owner; whole booking; `db_now < starts_at - cancellation_cutoff_minutes_snapshot` (`ADR-016`); showtime on sale; no earlier cancellation | Revoke QR; release all seats to `AVAILABLE`; create applied cancellation; outbox/audit |
+| BKG-03 | `CONFIRMED` | Admin booking cancellation | `ADMIN_CANCELLED` | Caller holds `bookings.cancel` (`ADMIN`); controlled reason code | Revoke QR; release or block inventory according to showtime; open reconciliation case if a payment remedy is owed; outbox/audit |
+| BKG-04 | `CONFIRMED` | Showtime cancellation | `SHOWTIME_CANCELLED` | Showtime cancellation wins showtime lock | Revoke QR; block inventory; open one reconciliation case, reason `SHOWTIME_CANCELLED_REFUND_DUE` (`ADR-017`); outbox/audit |
 | BKG-05 | Any cancelled state | Repeat cancellation | Unchanged | Same logical request or already terminal | Return existing result/status; no repeated release or outbox effect |
 
 ### 8.4 Forbidden booking transitions
@@ -478,15 +491,32 @@ A reused idempotency key with a different target, cancellation type, or payload 
 
 ## 10. Showtime-cancellation transaction
 
-The following is **Proposed** under PD-08/09 and remains gated.
+Accepted under `ADR-017`.
 
 ### 10.1 Guards
 
-- caller has `showtimes.cancel`;
+- caller has `showtimes.cancel`, held by `ADMIN` only;
 - showtime exists and is `PUBLISHED`;
-- non-empty controlled reason is supplied;
+- `transaction_timestamp() < starts_at` — a started or finished showtime cannot
+  be cancelled, and there is no stored `ENDED` state to rely on;
+- non-empty controlled reason code is supplied;
+- the impact preview for this command has been confirmed by the caller;
 - command idempotency is valid;
 - showtime row is locked before affected inventory or aggregates.
+
+### 10.1.1 Impact preview
+
+The command is two-step. The preview reads, without locking:
+
+- count of active holds that will be released;
+- count of confirmed bookings that will move to `SHOWTIME_CANCELLED`;
+- count of reconciliation cases that will open;
+- count of inventory rows that will be blocked.
+
+The caller then confirms, quoting the showtime reference. Effects are sweeping,
+terminal, and — with notifications out of scope — silent, so this preview is the
+only control standing between a misclick and a destroyed screening. Counts are
+advisory: the authoritative transaction re-reads everything under lock.
 
 ### 10.2 Atomic effects
 
@@ -499,9 +529,13 @@ Within one transaction:
 5. transition confirmed bookings to `SHOWTIME_CANCELLED`;
 6. transition their inventory to the non-sellable cancelled-showtime representation;
 7. revoke affected QR linkage;
-8. transition payment-ambiguous attempts to `RECONCILIATION_REQUIRED`;
-9. leave already accepted `FAILED` attempts failed;
-10. preserve already committed payment success and create a reconciliation case for each affected confirmed booking;
+8. transition payment-ambiguous attempts to `RECONCILIATION_REQUIRED` and open a
+   case for each;
+9. leave already accepted `FAILED` attempts failed, with no case;
+10. preserve already committed payment success, and open **one** reconciliation
+    case for **every** confirmed booking, reason `SHOWTIME_CANCELLED_REFUND_DUE`.
+    Every confirmed booking has a `SUCCEEDED` payment and the cinema is the party
+    cancelling, so the refund obligation is countable, not a judgement call;
 11. create one cancellation record and per-aggregate audit records;
 12. create deduplicated outbox events required for internal projections or customer-facing status;
 13. commit before acknowledging cancellation.
@@ -676,7 +710,8 @@ Resolve booking/showtime/seat IDs
 | Customer cancellation and duplicate success | Confirmed booking may be cancelled once; duplicate success cannot recreate or reactivate it. |
 | Success callback repeated | Unique provider event/callback disposition plus unique booking by hold/payment produces one booking effect. |
 | Same callback ID, changed payload | Reject as payload mismatch/security exception; no domain mutation. |
-| Failure followed by success | Under PD-04/05, failure releases the hold; later success becomes `LATE_SUCCESS_REFUND_REQUIRED`, never a booking. |
+| Failure followed by success, same attempt | The attempt is already `FAILED`; the later success becomes `LATE_SUCCESS_REFUND_REQUIRED` (`PAY-14`), never a booking. |
+| Failure, then the customer retries | The hold is still `ACTIVE` (`ADR-015`), so a new attempt is created at the next `attempt_number` and may confirm normally. The third failure releases the hold. |
 | Success followed by failure | Committed booking remains confirmed; later failure is contradictory and opens reconciliation. |
 | Timeout followed by success | Timeout did not prove failure, but inventory is no longer reserved; classify late success and never reclaim a seat. |
 | Callback received before client sees pending response | Callback may commit first; checkout/status response returns current authoritative booking result. |
@@ -701,6 +736,9 @@ The schema shall include equivalent protections for:
 - `expires_at = created_at + five minutes` or an equivalent immutable validated value;
 - state-dependent hold/inventory/booking linkage checks;
 - at most one `APPLIED` cancellation per booking, and per showtime;
+- at most three payment attempts per hold, and at most one open reconciliation
+  case per payment attempt;
+- an immutable `cancellation_cutoff_minutes_snapshot` on every booking;
 - `HELD` inventory requiring hold and expiry linkage;
 - `CONFIRMED` inventory requiring booking linkage and a cleared hold pointer;
 - `AVAILABLE` inventory having no hold or booking owner;
@@ -729,12 +767,16 @@ SEAT_CONFLICT
 HOLD_NOT_ACTIVE
 HOLD_EXPIRED
 HOLD_NOT_OWNED
+HOLD_TOO_CLOSE_TO_EXPIRY        # ADR-015, PAY-01 minimum-window guard
 PAYMENT_ALREADY_FINAL
+PAYMENT_ATTEMPT_LIMIT_REACHED   # ADR-015, fourth attempt on one hold
 PAYMENT_BINDING_INVALID
 BOOKING_ALREADY_EXISTS
 BOOKING_NOT_CANCELLABLE
 CANCELLATION_CUTOFF_REACHED
 SHOWTIME_ALREADY_CANCELLED
+SHOWTIME_ALREADY_STARTED        # ADR-017, ST-04 guard
+CANCELLATION_PREVIEW_REQUIRED   # ADR-017, unconfirmed impact preview
 IDEMPOTENCY_KEY_REUSED
 CALLBACK_REJECTED
 RECONCILIATION_REQUIRED
@@ -758,21 +800,22 @@ RECONCILIATION_REQUIRED
 | Transactional outbox | ADR-006; FR-043; NFR-002/006/007/009; release-gate worker/outbox scenarios |
 | Idempotency and lost-response recovery | FR-017/020/028/029; RULE-006; EX-06/09/13/15; AC-006/009 |
 | Lock/race release evidence | `RELEASE_GATES.md` P0 invariants and adversarial scenarios |
-| Proposed payment defaults | BRD D7–D10; RULE-022–025; ADR remaining decisions |
-| Proposed showtime remedy/authority | BRD D10/D13/D15; DELIVERY_TIMELINE Sprint 6 |
+| Payment lifecycle, timeout, precedence, retry | `ADR-015`; BRD D6–D10; RULE-022–024 |
+| Cancellation cutoff snapshot | `ADR-016`; BRD D11; RULE-015 |
+| Staff roles, showtime remedy and authority | `ADR-017`; BRD D13, D15; RULE-025; DELIVERY_TIMELINE Sprint 6 |
 
 ## 17. Sprint 0 approval checklist
 
 Sprint 0 may exit only when:
 
-- [ ] Every state enum and terminal/non-terminal meaning is approved.
-- [ ] PD-01 through PD-10 are approved, amended, or explicitly deferred with an implementation gate.
-- [ ] Payment timeout and reconciliation closure are recorded in `DECISIONS.md`.
-- [ ] Contradictory callback precedence is recorded in `DECISIONS.md`.
-- [ ] Explicit-failure hold treatment is recorded in `DECISIONS.md`.
-- [ ] Showtime-cancellation effects and authority are recorded in `DECISIONS.md`.
-- [ ] Exact customer cancellation boundary is approved.
-- [ ] Database constraints and lock order are reflected in the initial ERD.
+- [x] Every state enum and terminal/non-terminal meaning is approved.
+- [x] PD-01 through PD-10 are approved or amended — `ADR-015`, `ADR-016`, `ADR-017`.
+- [x] Payment timeout and reconciliation closure are recorded in `DECISIONS.md`.
+- [x] Contradictory callback precedence is recorded in `DECISIONS.md`.
+- [x] Explicit-failure hold treatment is recorded in `DECISIONS.md`.
+- [x] Showtime-cancellation effects and authority are recorded in `DECISIONS.md`.
+- [x] Exact customer cancellation boundary is approved.
+- [x] Database constraints and lock order are reflected in the initial ERD.
 - [ ] State transitions map to named Laravel Actions rather than controllers, observers, or Vue components.
 - [ ] Unit/property tests cover every allowed and forbidden transition.
 - [ ] Real-PostgreSQL tests are planned for hold, expiry, confirmation, cancellation, callback, and outbox races.
@@ -785,10 +828,19 @@ Sprint 0 may exit only when:
 
 - Designed authoritative state models for showtime, inventory, hold, payment attempt, booking, cancellation, reconciliation, and transactional outbox.
 - Defined guards, atomic side effects, forbidden transitions, deterministic lock ordering, replay behavior, and race precedence.
-- Separated approved requirements from ten clearly labeled **Proposed** portfolio defaults for still-gated payment and showtime-cancellation policy.
 - Added requirement/decision traceability and a Sprint 0 approval checklist.
+- **v1.2, 2026-08-10:** `PD-01`–`PD-10` resolved (`ADR-015`/`016`/`017`). Six
+  transitions changed or were added — `PAY-01` minimum-window and attempt-cap
+  guards, `PAY-04`/`HLD-05` retry semantics, new `PAY-05b` and `PAY-11b`,
+  `ST-04` started-showtime guard — plus the §10.1.1 impact preview and a
+  countable refund rule in §10.2. Nothing in this document is gated.
 - **v1.1, 2026-08-10:** applied `RC-02` (inventory linkage names the current owner
   only, and `INV-11` states its effect unconditionally), `RC-06` (one
   `cancellations` table for all three types), and `RC-07` (`RECEIVED` added as the
   pre-classification disposition). Cancellation uniqueness added to §14.
-- **Issues found:** Payment timeout, contradictory-result precedence, explicit-failure hold release, exact cancellation boundary, showtime-cancellation remedies, and cancellation authority remain unapproved and block the relevant implementation slices.
+- **Issues found and fixed in v1.2:** `CREATED` had no exit at hold expiry;
+  `UNRESOLVED` had no exit at all; `reconciliation_cases` was required by §7.1 and
+  absent from the schema; `payments.attempt_number` was unreachable; and removing
+  the stored `ENDED` state left a finished showtime cancellable.
+- **Still open:** `D14` (QR payload detail and rotation) and `D20` (named
+  approvers). Neither blocks an implementation slice.

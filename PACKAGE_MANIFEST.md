@@ -51,4 +51,4 @@ The package contains no Laravel/PHP application scaffold and therefore no:
 - framework-generated JavaScript or build configuration
 - `.env`, credentials, API keys, production data, or personal demo data
 
-Use Claude Code Plan mode with the prompt in `START_HERE.md`. Do not initialize Laravel until the review plan and proposed PD-01–PD-10 decisions are handled explicitly.
+Use Claude Code Plan mode with the prompt in `START_HERE.md`. `PD-01`–`PD-10` were resolved on 2026-08-10 as `ADR-015`, `ADR-016` and `ADR-017`; do not initialize Laravel until the review plan itself is approved.

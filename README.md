@@ -9,7 +9,8 @@ The project is designed to demonstrate more than CRUD: atomic multi-seat holds, 
 - Project type: Greenfield
 - Council verdict: Conditional Go
 - Current phase: Sprint 0 — review candidate; Laravel initialization intentionally deferred to Sprint 1
-- Product baseline: MVP policies and operational targets approved on 2026-08-10; PD-01–PD-10 remain proposed for Sprint 0 review
+- Product baseline: MVP policies and operational targets approved on 2026-08-10; `PD-01`–`PD-10` resolved the same day as `ADR-015`, `ADR-016`, `ADR-017`
+- Open decisions remaining: `D14` (QR payload detail), `D20` (named approvers), hall/seat versioning after publication — none block a slice
 - Baseline reconciliation (`S0-01`) applied 2026-08-10 — see [docs/BASELINE_RECONCILIATION.md](docs/BASELINE_RECONCILIATION.md)
 - Stack direction: Laravel + Vue 3/Inertia + PostgreSQL
 - Production promotion: No-Go until all P0 release gates pass

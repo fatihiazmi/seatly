@@ -17,7 +17,7 @@ LIVE = "#ffffff"          # non-terminal state
 TERM = "#d5e8d4"          # terminal state
 TERM_S = "#82b366"
 LIVE_S = "#4d4d4d"
-GATED = "#d79b00"         # transition gated on PD-01..PD-10
+GATED = "#d79b00"         # exception / reconciliation path
 
 BW, BH = 300, 80
 AX = [80, 540, 1000, 1460]        # left block slots
@@ -27,8 +27,8 @@ p = Page("Seatly State Machines", "sm")
 p.free_text("t", (80, 40), 2000, 40,
             "Seatly — Authoritative State Machines  (DOMAIN_STATE_MODELS.md v1.1)")
 p.free_text("st", (80, 80), 3400, 30,
-            "PostgreSQL commit order decides every race. Dashed amber transitions are gated on "
-            "PD-01–PD-10 and must not be implemented before approval.", fs=13, bold=False)
+            "PostgreSQL commit order decides every race. Dashed amber transitions are exception and "
+            "reconciliation paths. PD-01–PD-10 resolved 2026-08-10 — ADR-015/016/017.", fs=13, bold=False)
 
 
 def header(bid, x, y, text):
@@ -59,7 +59,7 @@ state("st_draft", "DRAFT", AX[0], Y)
 state("st_pub", "PUBLISHED", AX[1], Y)
 state("st_can", "CANCELLED", AX[2], Y, terminal=True)
 t("st_draft", "st_pub", "ST-03 publish → materialise inventory")
-t("st_pub", "st_can", "ST-04 cancel (PD-08/09)", gated=True)
+t("st_pub", "st_can", "ST-04 cancel \u2014 ADMIN, db_now < starts_at,\nimpact preview confirmed", gated=True)
 p.note("n_st", (AX[3], Y - 10), 380, 100,
        "No ENDED state (RC-03). On sale is derived:\n"
        "PUBLISHED AND db_now < starts_at",
@@ -90,7 +90,7 @@ state("hld_ex", "EXPIRED", AX[2], Y, terminal=True)
 state("hld_rl", "RELEASED", AX[3], Y, terminal=True)
 t("hld_ac", "hld_cf", "HLD-02 booking commits before expiry")
 t("hld_ac", "hld_ex", "HLD-03 db_now >= expires_at")
-t("hld_ac", "hld_rl", "HLD-04/05/06 abandon, payment failure, showtime cancel", gated=True)
+t("hld_ac", "hld_rl", "HLD-04/06 abandon or showtime cancel;\nHLD-05 third payment failure only", gated=True)
 
 # ===== Booking (BKG-01 … BKG-05) ===========================================
 Y = 1480
@@ -99,9 +99,9 @@ state("bkg_cf", "CONFIRMED", AX[0], Y)
 state("bkg_cc", "CUSTOMER_CANCELLED", AX[1], Y, terminal=True)
 state("bkg_ac", "ADMIN_CANCELLED", AX[2], Y, terminal=True)
 state("bkg_sc", "SHOWTIME_CANCELLED", AX[3], Y, terminal=True)
-t("bkg_cf", "bkg_cc", "BKG-02 owner + cutoff (PD-07)", gated=True)
-t("bkg_cf", "bkg_ac", "BKG-03 authorised policy (D15/PD-08)", gated=True)
-t("bkg_cf", "bkg_sc", "BKG-04 showtime cancellation (PD-09)", gated=True)
+t("bkg_cf", "bkg_cc", "BKG-02 owner + snapshotted cutoff", gated=True)
+t("bkg_cf", "bkg_ac", "BKG-03 ADMIN, bookings.cancel", gated=True)
+t("bkg_cf", "bkg_sc", "BKG-04 showtime cancellation", gated=True)
 
 # ===== Payment attempt (PAY-01 … PAY-15) ===================================
 Y1, Y2 = 220, 540
@@ -116,12 +116,14 @@ state("pay_rc", "RECONCILIATION_REQUIRED", BX[2], Y2)
 state("pay_ls", "LATE_SUCCESS_REFUND_REQUIRED", BX[3], Y2, terminal=True)
 t("pay_cr", "pay_pd", "PAY-02 initiation durable")
 t("pay_pd", "pay_sc", "PAY-03 valid success + confirmation commits")
-t("pay_pd", "pay_fl", "PAY-04 valid failure (PD-06)", gated=True)
-t("pay_pd", "pay_to", "PAY-05 deadline (PD-01/02)", gated=True)
+t("pay_pd", "pay_fl", "PAY-04 valid failure \u2014 hold survives\nunless this is the third", gated=True)
+t("pay_pd", "pay_to", "PAY-05 hold expiry, no final callback", gated=True)
 t("pay_pd", "pay_rc", "PAY-08 showtime cancelled", gated=True)
 t("pay_to", "pay_ls", "PAY-06 late success", gated=True)
+t("pay_cr", "pay_fl", "PAY-05b expiry, never submitted \u2014 no case", gated=True, sides=BELOW)
+t("pay_un", "pay_ls", "PAY-11b late success reopens the case", gated=True)
 t("pay_to", "pay_fl", "PAY-07 late failure", gated=True)
-t("pay_to", "pay_un", "PAY-11 window closes (PD-03)", gated=True)
+t("pay_to", "pay_un", "PAY-11 24h window closes", gated=True)
 t("pay_rc", "pay_ls", "PAY-09 valid success", gated=True)
 t("pay_rc", "pay_fl", "PAY-10 valid failure", gated=True)
 t("pay_fl", "pay_ls", "PAY-14 later success — never a booking", gated=True)
@@ -157,7 +159,24 @@ t("obx_dg", "obx_pd", "OBX-04/05 retry or lease expiry", sides=BELOW)
 t("obx_dg", "obx_dl", "OBX-06 exhausted or non-retryable")
 t("obx_dl", "obx_pd", "OBX-07 audited replay", sides=BELOW)
 
-p.note("n_lock", (80, 1780), 1680, 260,
+# ===== Reconciliation case (ADR-015) =======================================
+Y = 1780
+header("h_rec", BX[0], Y, "Reconciliation case — ADR-015")
+state("rec_op", "OPEN", BX[0], Y)
+state("rec_rs", "RESOLVED", BX[1], Y, terminal=True)
+state("rec_un", "UNRESOLVED", BX[2], Y)
+t("rec_op", "rec_rs", "a valid final outcome arrives")
+t("rec_op", "rec_un", "24h closure job", gated=True)
+t("rec_un", "rec_op", "PAY-11b late success reopens", gated=True, sides=BELOW)
+p.note("n_rec", (BX[3], Y - 10), 380, 130,
+       "Opened by PAY-05/06/08/09/11b/13 and by\n"
+       "showtime cancellation. PAY-05b opens none —\n"
+       "initiation was never sent, so nothing is\n"
+       "ambiguous. Nothing in MVP resolves a case\n"
+       "by hand; operator scope is inspection only.",
+       fill="#f5f5f5")
+
+p.note("n_lock", (80, 2200), 1680, 260,
        "Global lock order — every competing action uses it\n\n"
        "  1. showtime row\n"
        "  2. showtime_seats, ordered by seat_id ASC\n"
@@ -169,12 +188,12 @@ p.note("n_lock", (80, 1780), 1680, 260,
        "under a new command identity.",
        fill="#fff2cc", stroke="#d6b656")
 
-p.note("n_key", (2020, 1780), 1680, 260,
+p.note("n_key", (2020, 2200), 1680, 260,
        "Reading this diagram\n\n"
        "  white box      non-terminal state\n"
        "  green box      terminal state\n"
-       "  solid arrow    transition supported by the approved baseline\n"
-       "  dashed amber   transition gated on PD-01–PD-10; not implementable yet\n\n"
+       "  solid arrow    normal path\n"
+       "  dashed amber   exception, cancellation or reconciliation path\n\n"
        "A worker tick, HTTP request or callback receipt is only a request to attempt\n"
        "a transition — never proof that it is still eligible. Guards are re-evaluated\n"
        "after locks are held, using PostgreSQL time.",

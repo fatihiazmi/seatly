@@ -71,13 +71,20 @@ Develop deep Laravel mastery in:
 - Receive and view booking confirmation.
 - View and cancel owned bookings according to policy.
 
-### Cinema operator/admin
+### Cinema operator
 
 - Manage movies, venues, halls, and fixed seat layouts.
-- Create, publish, and cancel showtimes.
-- View booking and inventory state.
+- Create, update, and publish showtimes.
+- View booking, inventory, exception, and audit state.
+
+### Cinema admin
+
+Everything an operator may do, plus the irreversible commands (`ADR-017`):
+
+- Cancel a showtime — future showtimes only, behind a confirmed impact preview.
+- Cancel a booking.
 - Block or unblock seats through controlled operations.
-- Review audit and reconciliation information.
+- Review reconciliation cases.
 
 ### System worker
 
@@ -102,6 +109,8 @@ These MVP defaults were approved by the Product Owner on 2026-08-10. Changes req
 | Maximum seats per booking | 8 |
 | Hold duration | 5 minutes |
 | Hold extension | Not allowed |
+| Payment deadline | The hold's expiry; checkout blocked within 60 s of it (`ADR-015`) |
+| Payment retry | Up to three attempts per hold; the third failure releases it (`ADR-015`) |
 | Multi-seat acquisition | All requested seats or none |
 | Time authority | PostgreSQL UTC time |
 | Display time | Venue timezone |
@@ -109,11 +118,11 @@ These MVP defaults were approved by the Product Owner on 2026-08-10. Changes req
 | Price snapshot | At hold creation |
 | Payment | Simulated asynchronous provider |
 | Callback authentication | HMAC signature |
-| Late payment success | No booking; reconciliation/refund-required state |
+| Late payment success | No booking; reconciliation case recording the refund owed (`ADR-015`) |
 | Customer cancellation | Allowed before configurable cutoff |
-| Cancellation cutoff | 2 hours before showtime |
+| Cancellation cutoff | 120 minutes, snapshotted onto the booking at confirmation (`ADR-016`) |
 | Cancellation inventory result | Seats become available again if showtime is still on sale |
-| Showtime cancellation | Block new holds immediately |
+| Showtime cancellation | ADMIN only, future showtimes only, behind an impact preview; terminal (`ADR-017`) |
 | QR | High-entropy confirmation token; no PII |
 | QR scanner/check-in | Deferred |
 | Seat-map refresh | Short polling approximately every 5 seconds with ±20% jitter (4–6 s) |

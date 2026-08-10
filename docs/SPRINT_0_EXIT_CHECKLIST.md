@@ -45,8 +45,9 @@ Authorization to be recorded **separately**. Sprint 0 has one of the four.
 - [x] Baseline reconciled; contradictions resolved or downgraded, not silently chosen (`S0-01`, `BASELINE_RECONCILIATION.md`).
 - [ ] Domain state models reviewed and accepted by Product Owner/Tech Lead.
 - [ ] Logical ERD reviewed and accepted by Product Owner/Tech Lead/DBA.
-- [ ] Detailed payment timeout/contradictory-result/failure-release transitions approved before payment implementation.
-- [ ] Detailed showtime-cancellation remedies and admin authority approved before cancellation implementation.
+- [x] Detailed payment timeout/contradictory-result/failure-release transitions approved before payment implementation (`ADR-015`).
+- [x] Cancellation cutoff boundary and its source approved (`ADR-016`).
+- [x] Detailed showtime-cancellation remedies and admin authority approved before cancellation implementation (`ADR-017`).
 
 ## Development foundation
 
@@ -75,3 +76,14 @@ Do not proceed to payment or UI polish until a repeatable real-PostgreSQL test p
 ```
 
 Production remains No-Go until every P0 release gate has reproducible evidence.
+
+## Still open at Sprint 0 exit
+
+Neither blocks an implementation slice:
+
+- `D14` — QR payload detail and rotation policy, needed before the `P5-03` QR slice.
+- `D20` — named approvers per governance role.
+- Hall and seat versioning rules after a showtime has been published (`FR-038`,
+  `FR-041`), needed before destructive catalogue edits in `C2-03`.
+- `BO-08` — the exact accessibility standard to certify against, as distinct
+  from the WCAG 2.2 AA-oriented journey already approved.

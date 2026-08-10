@@ -1,12 +1,14 @@
 # Seatly Sprint 0 — Logical ERD Specification
 
 **Document ID:** SEATLY-ERD-001
-**Version:** 1.1
+**Version:** 1.2
 **Date:** 2026-08-10
-**Change note:** v1.1 applies `RC-02`–`RC-08` from
-[`BASELINE_RECONCILIATION.md`](BASELINE_RECONCILIATION.md). Every amendment
-aligns this schema with `DOMAIN_STATE_MODELS.md`, which is authoritative for
-states and transitions. No gated policy (`PD-01`–`PD-10`) is decided here.
+**Change note:** v1.1 applied `RC-02`–`RC-08` from
+[`BASELINE_RECONCILIATION.md`](BASELINE_RECONCILIATION.md), aligning this schema
+with `DOMAIN_STATE_MODELS.md`, which is authoritative for states and
+transitions. v1.2 carries the resolution of `PD-01`–`PD-10` (`ADR-015`,
+`ADR-016`, `ADR-017`): a new `reconciliation_cases` table, cancellation-cutoff
+columns on `showtimes` and `bookings`, and a named staff-role split.
 
 ### 1. Design stance
 
@@ -54,8 +56,16 @@ Constraints:
 #### `roles`
 
 - `id SMALLINT` **PK**
-- `code VARCHAR(32)` **UQ** — e.g. `CUSTOMER`, `OPERATOR`, `ADMIN`
+- `code VARCHAR(32)` **UQ** — `CUSTOMER`, `OPERATOR`, `ADMIN`
 - `name`
+
+Capabilities are fixed in code against these three codes (`ADR-017`), not stored:
+
+| Role | May do |
+|---|---|
+| `CUSTOMER` | Own holds, payments, bookings and cancellations |
+| `OPERATOR` | Movie, venue, hall and seat maintenance; showtime create, update and publish; all inspection |
+| `ADMIN` | Everything `OPERATOR` may do, plus `showtimes.cancel`, `bookings.cancel`, and seat block/unblock |
 
 #### `role_user`
 
@@ -63,7 +73,7 @@ Constraints:
 - `role_id` **FK → roles**
 - **PK:** `(user_id, role_id)`
 
-This is sufficient for MVP; do not build a generic permission engine unless authorization requirements expand.
+This is sufficient for MVP; do not build a generic permission engine unless authorization requirements expand. The operator/admin split exists because `RELEASE_GATES.md` requires the authorization matrix to be exercised with distinct operator and admin identities — a test that needs something an operator cannot do.
 
 ---
 
@@ -169,6 +179,7 @@ The two unique keys ensure a seat cannot participate in multiple pairs. PostgreS
 - `sales_close_at timestamptz NULL`
 - `price_minor BIGINT`
 - `currency CHAR(3)` default `MYR`
+- `cancellation_cutoff_minutes INTEGER NOT NULL DEFAULT 120`
 - `published_at timestamptz NULL`
 - `cancelled_at timestamptz NULL`
 - `cancellation_reason_code VARCHAR(64) NULL`
@@ -179,6 +190,7 @@ Constraints:
 - **CK:** `ends_at > starts_at`
 - **CK:** `price_minor >= 0`
 - **CK:** currency is uppercase ISO-format: `currency ~ '^[A-Z]{3}$'`
+- **CK:** `cancellation_cutoff_minutes >= 0`
 - **CK:** `version > 0`
 - State-dependent **CK**:
   - `DRAFT`: `published_at IS NULL AND cancelled_at IS NULL`
@@ -368,23 +380,28 @@ Constraints:
 - **UQ:** `(hold_id, attempt_number)`
 - **UQ:** `(provider, provider_payment_id)`
 - **UQ:** `(id, hold_id)` for booking’s composite FK.
-- **CK:** `attempt_number > 0`
+- **CK:** `attempt_number BETWEEN 1 AND 3`
 - **CK:** `amount_minor >= 0`
 - State-dependent timestamp/reconciliation checks.
 
 Do not add real card, account, or bank fields.
 
-The eight statuses match `DOMAIN_STATE_MODELS.md` §7.2 exactly (`RC-04`).
-`LATE_SUCCESS_REFUND_REQUIRED` and `UNRESOLVED` are storable but not yet
-reachable: the transitions that produce them (`PAY-06`, `PAY-09`, `PAY-11`,
-`PAY-14`) depend on `PD-02`, `PD-03`, `PD-04`, and `PD-05`, which remain
-Proposed. `REFUND_REQUIRED` is a classification; no refund is executed.
+The eight statuses match `DOMAIN_STATE_MODELS.md` §7.2 exactly (`RC-04`), and
+all of them are now reachable under `ADR-015`. `REFUND_REQUIRED` is a
+classification; no refund is executed.
 
-**No `timeout_at` column (`RC-08`).** `PAY-05` guards on a deadline, and under
-`PD-01` that deadline *is* `holds.expires_at` — storing it twice would create a
-second authority for the same instant. If `PD-01` is amended to give payment an
-independent timer, add `timeout_at timestamptz` at that point and make the guard
-read it.
+**Up to three attempts per hold (`ADR-015`).** An explicit payment failure leaves
+the hold `ACTIVE`, so the customer may retry until `expires_at`; the third
+failure releases the hold. `attempt_number` and its unique constraint carry that
+sequence. `PAY-01` rejects a fourth with `PAYMENT_ATTEMPT_LIMIT_REACHED`, and
+rejects any attempt started within 60 seconds of `expires_at` with
+`HOLD_TOO_CLOSE_TO_EXPIRY`.
+
+**No `timeout_at` column (`RC-08`, confirmed by `ADR-015`).** `PAY-05` guards on
+a deadline, and that deadline *is* `holds.expires_at`. Storing it twice would
+create a second authority for the same instant. If a future decision gives
+payment an independent timer, add `timeout_at timestamptz` then and make the
+guard read it.
 
 #### `payment_callback_events`
 
@@ -468,6 +485,7 @@ Payment timeout and contradictory-outcome precedence remain gated policy decisio
 - `venue_timezone_snapshot`
 - `hall_name_snapshot`
 - `showtime_starts_at_snapshot timestamptz`
+- `cancellation_cutoff_minutes_snapshot INTEGER NOT NULL`
 - `qr_token_hash CHAR(64)`
 - `qr_expires_at timestamptz`
 - `qr_revoked_at timestamptz NULL`
@@ -485,9 +503,14 @@ Constraints:
 
 The unique `hold_id` and `payment_id` enforce at most one booking effect for each intent and successful payment attempt.
 
-`ADMIN_CANCELLED` (`RC-05`) is storable so that `BKG-03` has a target state, but
-the administrative booking-cancellation command itself remains gated on `D15` and
-`PD-08`.
+`ADMIN_CANCELLED` (`RC-05`) is the target state for `BKG-03`, which `ADR-017`
+grants to `ADMIN` only.
+
+`cancellation_cutoff_minutes_snapshot` is copied from
+`showtimes.cancellation_cutoff_minutes` at confirmation and is immutable
+(`ADR-016`). Cancellation eligibility reads the snapshot, never the live
+showtime value, so changing the policy cannot retroactively re-term a booking
+that has already been sold — the same reasoning as the price snapshot.
 
 #### `booking_items`
 
@@ -565,6 +588,50 @@ here under `state = 'REJECTED'`.
 
 A rejected authorization may return a generic external response while this row
 records the precise protected reason.
+
+#### `reconciliation_cases`
+
+Operational visibility for ambiguous, contradictory, late, or paid-but-unbooked
+outcomes. This is the third record type `DOMAIN_STATE_MODELS.md` §7.1 has always
+required and the schema never grew (`ADR-015`).
+
+- `id BIGINT` **PK**
+- `public_id UUID` **UQ**
+- `payment_id BIGINT NULL` **FK → payments**
+- `booking_id BIGINT NULL` **FK → bookings**
+- `state VARCHAR(16)` — `OPEN`, `RESOLVED`, `UNRESOLVED`
+- `reason_code VARCHAR(64)`
+- `opened_at timestamptz`
+- `closed_at timestamptz NULL`
+- `correlation_id UUID`
+
+Constraints:
+
+- **CK:** at least one target — `payment_id IS NOT NULL OR booking_id IS NOT NULL`.
+- **CK:** `OPEN` implies `closed_at IS NULL`; the other states imply it is set.
+- Partial **UQ:** one open case per payment attempt —
+
+```sql
+UNIQUE (payment_id) WHERE state = 'OPEN' AND payment_id IS NOT NULL;
+```
+
+Reason codes include `PAYMENT_TIMED_OUT`, `LATE_SUCCESS_REFUND_DUE`,
+`CONTRADICTORY_OUTCOME`, `SHOWTIME_CANCELLED_REFUND_DUE`.
+
+**Why this is not a status column on `payments`.** Most cases could live there,
+but two cannot, because in both the payment is `SUCCEEDED` and §7.6 forbids it
+from moving:
+
+- `PAY-13` — a committed success later contradicted by a failure callback. The
+  booking stands; the contradiction still has to be visible somewhere.
+- `ADR-017` showtime cancellation — every confirmed booking is owed a refund, and
+  its payment succeeded entirely legitimately.
+
+A case is opened by `PAY-05`, `PAY-06`, `PAY-08`, `PAY-09`, `PAY-11b`, `PAY-13`,
+and by showtime cancellation. `PAY-05b` deliberately opens none: initiation was
+never durably sent, so nothing is ambiguous. Nothing in MVP resolves a case by
+hand — operator scope is inspection only — so `RESOLVED` is reached by a later
+callback and `UNRESOLVED` by the 24-hour closure job.
 
 ---
 
@@ -660,6 +727,8 @@ Payment     0..1 ── 1 Booking
 Booking     1 ──< BookingItem
 Booking     1 ──< Cancellation attempts, type CUSTOMER_BOOKING or ADMIN_BOOKING
 Showtime    1 ──< Cancellation attempts, type SHOWTIME
+Payment     1 ──< ReconciliationCase, at most one OPEN at a time
+Booking     1 ──< ReconciliationCase
 ShowtimeSeat 1 ──< BookingItem over history
 ```
 
@@ -703,6 +772,9 @@ For a single seat-map response, `(showtime_id, seat_id)` remains the primary acc
 - `bookings (showtime_id, status)`
 - `cancellations (booking_id, requested_at DESC) WHERE booking_id IS NOT NULL`
 - `cancellations (showtime_id, requested_at DESC) WHERE showtime_id IS NOT NULL`
+- `reconciliation_cases (state, opened_at) WHERE state = 'OPEN'` — drives the
+  24-hour closure job and the unresolved-case report
+- `reconciliation_cases (booking_id) WHERE booking_id IS NOT NULL`
 
 ### Reliability
 
@@ -735,6 +807,7 @@ Use `INCLUDE` columns only after `EXPLAIN (ANALYZE, BUFFERS)` shows a material b
 4. **Operational history**
    - `payment_callback_events` is the deduplicated callback inbox.
    - `cancellations` records cancellation decisions for bookings and showtimes.
+   - `reconciliation_cases` records money that needs a human answer.
    - `audit_events` records append-only actor/transition/result history.
    - `outbox_events` records durable integration events, not a general audit log.
 
@@ -818,7 +891,8 @@ A late success records `RECONCILIATION_REQUIRED`/`LATE_SUCCESS`; it must never r
 7. Create `showtime_seats` initially with owner IDs but without owner FKs.
 8. Create `holds` and `hold_items`; add hold snapshot/pair/count constraint triggers.
 9. Create `payments` and `payment_callback_events`.
-10. Create `bookings`, `booking_items`, and `cancellations`.
+10. Create `bookings`, `booking_items`, `cancellations`, and
+    `reconciliation_cases`.
 11. Add composite owner FKs from `showtime_seats` to `holds` and `bookings`.
 12. Add final state-dependent `showtime_seats` checks after owner FKs exist.
 13. Add booking/hold exact-coverage deferred constraint triggers.
@@ -845,7 +919,10 @@ Include all entities above because they establish the correctness boundaries, bu
 - microservice-owned replicas;
 - WebSocket presence/subscription tables.
 
-The remaining open payment timeout, contradictory callback precedence, explicit-failure release, and showtime-cancellation remedy policies should be represented by explicit statuses and reason codes, not silently decided in schema defaults.
+Payment timeout, contradictory callback precedence, explicit-failure release, and
+showtime-cancellation remedy are all resolved as of 2026-08-10 (`ADR-015`,
+`ADR-016`, `ADR-017`) and are represented by explicit statuses and reason codes
+rather than schema defaults.
 
 ---
 
@@ -861,6 +938,11 @@ The remaining open payment timeout, contradictory callback precedence, explicit-
   payment statuses, one missing booking status, a stored `ENDED` showtime state
   the domain model derives, two incompatible cancellation models, and two
   callback-disposition vocabularies.
-- **Issues:** Detailed payment precedence/timeout and showtime-cancellation
-  remedy policies remain intentionally open. The states and reason codes they
-  will populate now exist in the schema; the transitions into them do not.
+- **v1.2, 2026-08-10:** carried `ADR-015`/`016`/`017`. Added
+  `reconciliation_cases` — the record §7.1 required and the schema lacked, and
+  the only place a case can live when the payment is and must remain
+  `SUCCEEDED`. Added `showtimes.cancellation_cutoff_minutes` and its booking
+  snapshot, capped `attempt_number` at 3, and wrote the operator/admin
+  capability split against the existing role codes.
+- **Issues:** None blocking. `D14` (QR payload detail) and `D20` (named
+  approvers) remain open and neither touches this schema.

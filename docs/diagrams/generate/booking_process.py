@@ -40,7 +40,7 @@ p.free_text("t", (60, 40), 2200, 40,
             "Seatly — End-to-End Customer Booking  (BPMN 2.0 analytical model)")
 p.free_text("st", (60, 82), 3600, 30,
             "PostgreSQL is authoritative. Browsing is public; authentication begins at the hold "
-            "request (ADR-014). 5-minute hold, max 8 seats, no extension.", fs=13, bold=False)
+            "request (ADR-014). 5-minute hold, max 8 seats, no extension. Payment policy per ADR-015/016/017.", fs=13, bold=False)
 
 lane("lane_customer",  "Customer",                           140,  400, "#dae8fc", "#6c8ebf")
 lane("lane_service",   "Seatly — Customer Service",          560,  170, "#e1d5e7", "#9673a6")
@@ -82,6 +82,7 @@ task("c_confirm", "View booking reference\nand QR", 3660, R1, 240, "#82b366", "#
 task("c_end_ok", "End", 4000, R1, 100, CUS, extra=END)
 
 task("c_reselect", "Conflict: refresh map\nand select again", 1940, R2, 240, "#d79b00", "#ffe6cc")
+task("c_gw_retry", "Retry?", 3360, R2, 140, CUS, extra=GATE)
 task("c_noncon", "View failed / expired /\ncancelled / in review", 3660, R2, 240, "#b85450", "#f8cecc")
 task("c_end_no", "End", 4000, R2, 100, CUS, extra=END)
 
@@ -107,22 +108,22 @@ task("s_qr", "Create or recover reference\nand QR linkage", 4240, R4, 220, "#82b
 
 task("s_hold_timer", "Hold expires\n5 min, DB clock", 2560, R5, 200, INV, extra=EVENT)
 task("s_validate_co", "Validate hold, ownership,\nshowtime and retry key", 2880, R5, 220, INV)
-task("s_cancel_event", "Showtime cancellation subprocess:\nprevent any later confirmation\n(PD-08/09, gated)",
+task("s_cancel_event", "Showtime cancellation subprocess:\nprevent any later confirmation;\none refund case per booking",
      4240, R5, 240, "#b85450", "#f8cecc")
 
 # ---- payment and reconciliation lane --------------------------------------
 R6, R7 = 1210, 1430
-task("s_create_payment", "Create or recover\nidempotent payment attempt", 2880, R6, 220, PAY)
+task("s_create_payment", "Create or recover attempt.\nReject within 60 s of expiry,\nor past 3 attempts", 2880, R6, 220, PAY)
 task("s_send_payment", "Send simulated\npayment initiation", 3200, R6, 220, PAY)
 task("s_wait_payment", "Await callback,\ntimeout or hold expiry", 3520, R6, 220, PAY, extra=WAIT)
 task("s_callback", "Validate, correlate and\ndeduplicate callback", 3840, R6, 220, PAY)
 task("s_gw_callback", "Outcome?", 4160, R6, 140, PAY, extra=GATE)
 
-task("s_failure", "Record failure; apply\napproved hold policy (PD-06)", 2880, R7, 240,
+task("s_failure", "Record failure. Hold survives\nunless this is the third attempt", 2880, R7, 240,
      "#b85450", "#f8cecc")
-task("s_late", "Record timeout / late / contradictory\n→ reconciliation (PD-02/04/05)",
+task("s_late", "Record timeout / late / contradictory\n→ open reconciliation case",
      3220, R7, 280, "#d79b00", "#ffe6cc")
-task("s_deadline", "Deadline = hold expiry\n(PD-01, gated)", 3600, R7, 220, "#d6b656",
+task("s_deadline", "Deadline = hold expiry\nno second timer", 3600, R7, 220, "#d6b656",
      extra=EVENT)
 
 # ---- provider lane ---------------------------------------------------------
@@ -135,11 +136,12 @@ task("p_none", "No callback\n(timeout scenario)", 3780, R9, 280, "#b85450", "#f8
 
 # ---- admin lane ------------------------------------------------------------
 R10 = 2040
-task("a_start", "Start", 3200, R10, 100, ADM, extra=EVENT)
-task("a_review", "Authorise and review\ncancellation impact", 3360, R10, 240, ADM)
-task("a_cancel", "Submit authoritative showtime\ncancellation (PD-08, gated)", 3700, R10, 260,
+task("a_start", "Start", 2800, R10, 100, ADM, extra=EVENT)
+task("a_review", "Authorise (ADMIN only)\nand select showtime", 2960, R10, 240, ADM)
+task("a_preview", "Review impact preview:\nholds, bookings, refund cases", 3300, R10, 260, ADM)
+task("a_cancel", "Confirm cancellation,\nquoting showtime reference", 3660, R10, 260,
      "#b85450", "#f8cecc")
-task("a_end", "End", 4060, R10, 100, ADM, extra=END)
+task("a_end", "End", 4020, R10, 100, ADM, extra=END)
 
 
 def seq(a, b, label="", colour="#333333", sides=None):
@@ -157,11 +159,14 @@ for a, b, lbl in [
     ("c_gw_hold", "c_review", "Yes"), ("c_gw_hold", "c_reselect", "No"),
     ("c_review", "c_pay", ""), ("c_pay", "c_pending", ""),
     ("c_pending", "c_wait", ""), ("c_wait", "c_final", ""),
-    ("c_final", "c_confirm", "Yes"), ("c_final", "c_noncon", "No"),
+    ("c_final", "c_confirm", "Yes"), ("c_final", "c_gw_retry", "No"),
+    ("c_gw_retry", "c_noncon", "No \u2014 expired or 3 failures"),
     ("c_confirm", "c_end_ok", ""), ("c_noncon", "c_end_no", ""),
 ]:
     seq(a, b, lbl, colour="#6c8ebf")
 seq("c_reselect", "c_select", "retry", colour="#d79b00", sides=("W", "S"))
+seq("c_gw_retry", "c_pay", "Yes \u2014 hold still active,\nfewer than 3 attempts",
+    colour="#d79b00", sides=("W", "S"))
 
 for a, b, lbl in [
     ("s_validate_hold", "s_atomic_hold", ""), ("s_atomic_hold", "s_gw_hold", ""),
@@ -187,7 +192,8 @@ seq("p_scenario", "p_callback", "Callback scenarios", colour="#b85450")
 seq("p_scenario", "p_none", "No callback", colour="#b85450")
 
 seq("a_start", "a_review", "", colour="#666666")
-seq("a_review", "a_cancel", "", colour="#666666")
+seq("a_review", "a_preview", "", colour="#666666")
+seq("a_preview", "a_cancel", "Confirmed", colour="#666666")
 seq("a_cancel", "a_end", "", colour="#666666")
 
 msg("c_browse", "s_browse", "Browse request / result")
@@ -214,17 +220,18 @@ p.note("legend", (60, 2260), 2100, 200,
        "  hexagon        event-based wait\n"
        "  dashed arrow   message flow between pools\n"
        "  solid arrow    sequence flow or internal handoff\n"
-       "  red / amber    gated on PD-01–PD-10, not implementable yet",
+       "  red / amber    exception, cancellation or refund path",
        fill="#f5f5f5", stroke="#666666")
 
 p.note("open_note", (2260, 2260), 2360, 200,
-       "Not executable yet\n\n"
-       "Payment timeout, contradictory-outcome precedence, hold release after explicit failure, "
-       "late-success remedy, the exact cancellation boundary and the reconciliation window are all "
-       "still Proposed (PD-01–PD-10).\n\n"
-       "The amber and red elements show where those decisions land. They are drawn so the shape of the "
-       "process is reviewable — not so it can be built. Refinement to an executable model requires the "
-       "approvals first.",
+       "Policy status\n\n"
+       "PD-01 to PD-10 were resolved on 2026-08-10 (ADR-015, ADR-016, ADR-017), so payment timeout, "
+       "callback precedence, post-failure retry, the cancellation boundary, showtime-cancellation "
+       "effects and admin authority are all Accepted and implementable.\n\n"
+       "Still open, neither blocking a slice: D14 (QR payload detail and rotation) and D20 (named "
+       "approvers per governance role). Hall and seat versioning after publication is open before "
+       "destructive catalogue edits.\n\n"
+       "Red and amber elements are exception, cancellation and refund paths \u2014 not gated work.",
        fill="#fff2cc", stroke="#d6b656")
 
 problems = p.wire()

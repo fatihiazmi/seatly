@@ -13,6 +13,11 @@
 | All-or-none multi-seat hold | BR-04; RULE-003; AC-001/002 | `DOMAIN_STATE_MODELS.md` §§5–6/13 | H3-01/02/04/05 | Same-seat and overlapping-group reports |
 | Five-minute expiry | PP-03/04; RULE-012/013; FR-011/014/015 | `DOMAIN_STATE_MODELS.md` §§3.2/6 | L4-01/02 | Expiry-boundary and delayed-worker evidence |
 | Accessible/companion seats | PP-10; ADR-012; NFR-004 | `MVP_POLICY_BASELINE.md` §1; `LOGICAL_ERD.md` §§2.2/2.4 | C2-01, H3-01, L4-03 | Keyboard/screen-reader and pair-concurrency evidence |
+| Payment deadline, retry and timeout | RULE-023/024; FR-025/026; ADR-015 | `DOMAIN_STATE_MODELS.md` §7.4 (`PAY-01`, `PAY-05`, `PAY-05b`) | P5-01 | Minimum-window, attempt-cap and timeout evidence |
+| Contradictory outcome precedence | RULE-022; FR-021; AC-010; ADR-015 | `DOMAIN_STATE_MODELS.md` §7.5 | P5-04 | Payment-chaos report |
+| Reconciliation case lifecycle | RULE-025; BR-14; ADR-015 | `LOGICAL_ERD.md` §2.6 `reconciliation_cases` | P5-04, O6-03 | One case per ambiguous outcome; none dropped while money is owed |
+| Cancellation cutoff snapshot | RULE-015; FR-032; ADR-016 | `LOGICAL_ERD.md` §2.3/§2.6 | O6-02 | Boundary tests, plus a booking whose snapshot differs from the live showtime |
+| Staff role separation | RULE-009; FR-037–044; ADR-017 | `LOGICAL_ERD.md` §2.1 | O6-01, O6-03 | Authorization matrix — operator refused admin-only commands |
 | Idempotent payment callbacks | BR-06/14; FR-016–029; RULE-006/019 | `DOMAIN_STATE_MODELS.md` §7; `LOGICAL_ERD.md` §2.5 | P5-01–P5-05 | Payment-chaos and callback-inbox evidence |
 | Atomic confirmation | BR-03/07; FR-022–024; AC-005 | `DOMAIN_STATE_MODELS.md` §§7–8/12.3 | P5-03 | Booking/inventory invariant SQL |
 | Late payment reconciliation | PP-08; RULE-018; AC-007 | `DOMAIN_STATE_MODELS.md` §7 | P5-04 | Paid-but-unbooked reconciliation report |
