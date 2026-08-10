@@ -376,6 +376,70 @@ active hall seat. Repeated publication must not duplicate inventory.
 
 **Trace:** FR-003/039/040; RULE-001/004; ADR-005; AC-015.
 
+```text
+Status:              DONE (2026-08-10)
+Requirement IDs:     FR-003/039/040; RULE-001/004; ADR-005; AC-015
+Gate/P0 IDs:         G1, G2; prerequisite to G3
+Red evidence:        docs/evidence/C2-02/red.md — all 40 cases failed on missing
+                     classes before any migration, model or action existed.
+Green evidence:      docs/evidence/C2-02/green.md — 123 tests / 274 assertions
+                     across the suite, Pint and PHPStan clean, plus the coverage
+                     invariant SQL returning zero on both halves.
+Implementation notes: covers ST-01 through ST-03 and INV-01. ST-04 cancellation
+                     is O6-03 and is not implemented here.
+
+                     App\Actions\Showtimes\PublishShowtime is one transaction:
+                     lock the showtime first per the global lock order, run the
+                     ST-03 guards, INSERT ... SELECT one AVAILABLE row per active
+                     seat, then flip status. Set-based on purpose — a per-seat
+                     loop could interleave with a layout change halfway through,
+                     and the (showtime_id, seat_id) primary key makes duplication
+                     impossible regardless.
+
+                     No stored ENDED state (RC-03). Showtime::scopeOnSale is
+                     status = PUBLISHED AND transaction_timestamp() < starts_at,
+                     evaluated by PostgreSQL inside the asking transaction, so a
+                     finished showtime can never read as bookable because a job
+                     failed to run.
+
+                     The hall-overlap exclusion constraint is partial on
+                     status = 'PUBLISHED' and half-open '[)', so two drafts may
+                     overlap and one showtime may end exactly as the next begins.
+                     PublishShowtime checks the same condition first, turning a
+                     raw constraint violation into HALL_SCHEDULE_CONFLICT.
+
+                     Deviation from migration sequencing, recorded deliberately:
+                     the state-dependent showtime_seats linkage CHECK is created
+                     at step 7 rather than step 12. Step 12 defers it until the
+                     composite owner FKs exist, but the CHECK only compares
+                     columns within one row and has no dependency on holds or
+                     bookings. Adding it now makes every row this slice writes
+                     provably clean. The composite owner FKs themselves remain
+                     at step 11 as documented.
+
+                     Two real defects surfaced. ShowtimeSeat has the composite
+                     primary key the ERD requires, which Eloquent cannot model,
+                     so every chunk-based helper — each(), chunkById(), find() —
+                     emits ORDER BY "" and fails; documented on the model and
+                     avoided in the tests. And PHPStan showed the @return
+                     array<string, string> annotation on casts() made Larastan
+                     read status as a string, so the enum guard in PublishShowtime
+                     was typed as "always true"; fixed with explicit @property
+                     declarations on Showtime, Seat and ShowtimeSeat.
+
+                     Not included, and deliberately: the SHOWTIME_PUBLISHED
+                     outbox event and the audit record, whose tables arrive at
+                     sequencing step 14 in Phase 5; and authorization, which
+                     arrives with roles in O6-01.
+
+                     CatalogueSeeder covers sequencing step 16 — a venue, two
+                     6x10 halls with two accessible/companion pairs each, three
+                     movies, and publish-time materialization rehearsed against
+                     real PostgreSQL.
+Open decisions:      none new. D21 (companion adjacency, raised in C2-01) is
+                     still open and still does not block this slice.
+```
+
 ### C2-03 — Structural integrity after publication
 
 Reject changes that would corrupt active or historical showtime inventory.

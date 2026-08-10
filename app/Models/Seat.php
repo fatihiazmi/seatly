@@ -10,6 +10,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
+/**
+ * @property int $id
+ * @property string $public_id
+ * @property int $hall_id
+ * @property string $row_label
+ * @property string $seat_number
+ * @property string $display_label
+ * @property SeatType $seat_type
+ * @property int $sort_order
+ * @property bool $is_active
+ * @property-read Hall $hall
+ */
 class Seat extends Model
 {
     /** @use HasFactory<SeatFactory> */
