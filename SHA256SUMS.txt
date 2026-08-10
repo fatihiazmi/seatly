@@ -8,9 +8,9 @@ aa1d17b4c5a793a9faf97cead25a2e653754a1d2a43a9e8dcbd294f74115c361  ./docs/BRD.md
 9d6009afeb68b1ceb3788544dd120a3fb16d7eaf1a19bb6e6542f5ffd4413531  ./docs/diagrams/generate/erd.py
 f0ae6eb46aa2ed71483f29c6f3a4f1e9200edb6ed70d840f175a7e9054103bfa  ./docs/diagrams/generate/README.md
 b993c17e96ceac82415a3a217ff259b0f666be58e9969fb14def12c3748f8bd8  ./docs/diagrams/generate/state_machines.py
-94c4f67790515f445e000febe92465058f9826bf112b894258084787608c07a8  ./docs/diagrams/seatly-booking-process.drawio
-2e77d96405f07768c9adb3a111695562f8abb5aa6817b1ef0a8b424d851dffd8  ./docs/diagrams/seatly-logical-erd.drawio
-639b622ad2ca1a57c19698b7c0133cc73dfd159c89681becf42a7313175c23c9  ./docs/diagrams/seatly-state-machines.drawio
+dd3a3e05701b38a7860cba24180bfe26fc58676d446f2cd2c17c019adc6011b4  ./docs/diagrams/seatly-booking-process.drawio
+bc32c281862f117196b98055b49b5760560f2c98ffffc6c99ec960fb2b8b16ec  ./docs/diagrams/seatly-logical-erd.drawio
+5afce5a17f9bc5e91b2ee235beee6ca5262a1eee24f41e189b013a66b821f2c3  ./docs/diagrams/seatly-state-machines.drawio
 29f94c1f773e206c8c162d582f7ae39962e8b2dabc8fb35da3c5f89ffaeb16e5  ./docs/DOMAIN_STATE_MODELS.md
 1d72d2d3c5ef84b8e8df390536a779ea61d3dcb0b1e4281689f6bb0bda0a0ad4  ./docs/LOGICAL_ERD.md
 e284b20663fecd7e6450758b8a91c0eab50ac4d6ccd1b361297b7e1dbc93e15f  ./docs/MVP_POLICY_BASELINE.md

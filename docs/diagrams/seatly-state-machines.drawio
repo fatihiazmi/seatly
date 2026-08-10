@@ -4,13 +4,13 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="t" value="Seatly — Authoritative State Machines  (DOMAIN_STATE_MODELS.md v1.1)" style="text;html=1;fontSize=26;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+        <mxCell id="t" value="Seatly — Authoritative State Machines  (DOMAIN_STATE_MODELS.md v1.1)" style="text;html=1;whiteSpace=wrap;fontSize=26;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="80" y="40" width="2000" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="st" value="PostgreSQL commit order decides every race. Dashed amber transitions are exception and reconciliation paths. PD-01–PD-10 resolved 2026-08-10 — ADR-015/016/017." style="text;html=1;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;" vertex="1" parent="1">
+        <mxCell id="st" value="PostgreSQL commit order decides every race. Dashed amber transitions are exception and reconciliation paths. PD-01–PD-10 resolved 2026-08-10 — ADR-015/016/017." style="text;html=1;whiteSpace=wrap;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="80" y="80" width="3400" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="h_st" value="Showtime — §4" style="text;html=1;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+        <mxCell id="h_st" value="Showtime — §4" style="text;html=1;whiteSpace=wrap;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="80" y="164" width="620" height="34" as="geometry" />
         </mxCell>
         <mxCell id="st_draft" value="DRAFT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=14;fontStyle=1;" vertex="1" parent="1">
@@ -22,11 +22,10 @@
         <mxCell id="st_can" value="CANCELLED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="1000" y="220" width="300" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="n_st" value="No ENDED state (RC-03). On sale is derived:
-PUBLISHED AND db_now &lt; starts_at" style="text;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#f5f5f5;strokeColor=#999999;fontSize=12;dashed=1;rounded=1;" vertex="1" parent="1">
+        <mxCell id="n_st" value="No ENDED state (RC-03). On sale is derived:&lt;br&gt;PUBLISHED AND db_now &lt; starts_at" style="text;html=1;whiteSpace=wrap;overflow=hidden;align=left;verticalAlign=top;spacing=10;fillColor=#f5f5f5;strokeColor=#999999;fontSize=12;dashed=1;rounded=1;" vertex="1" parent="1">
           <mxGeometry x="1460" y="210" width="380" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="h_inv" value="Showtime-seat inventory — §5" style="text;html=1;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+        <mxCell id="h_inv" value="Showtime-seat inventory — §5" style="text;html=1;whiteSpace=wrap;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="80" y="584" width="620" height="34" as="geometry" />
         </mxCell>
         <mxCell id="inv_av" value="AVAILABLE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=14;fontStyle=1;" vertex="1" parent="1">
@@ -41,7 +40,7 @@ PUBLISHED AND db_now &lt; starts_at" style="text;html=1;align=left;verticalAlign
         <mxCell id="inv_bl" value="BLOCKED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="1460" y="640" width="300" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="h_hld" value="Hold — §6" style="text;html=1;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+        <mxCell id="h_hld" value="Hold — §6" style="text;html=1;whiteSpace=wrap;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="80" y="1004" width="620" height="34" as="geometry" />
         </mxCell>
         <mxCell id="hld_ac" value="ACTIVE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=14;fontStyle=1;" vertex="1" parent="1">
@@ -56,7 +55,7 @@ PUBLISHED AND db_now &lt; starts_at" style="text;html=1;align=left;verticalAlign
         <mxCell id="hld_rl" value="RELEASED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="1460" y="1060" width="300" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="h_bkg" value="Booking — §8" style="text;html=1;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+        <mxCell id="h_bkg" value="Booking — §8" style="text;html=1;whiteSpace=wrap;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="80" y="1424" width="620" height="34" as="geometry" />
         </mxCell>
         <mxCell id="bkg_cf" value="CONFIRMED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=14;fontStyle=1;" vertex="1" parent="1">
@@ -71,7 +70,7 @@ PUBLISHED AND db_now &lt; starts_at" style="text;html=1;align=left;verticalAlign
         <mxCell id="bkg_sc" value="SHOWTIME_CANCELLED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="1460" y="1480" width="300" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="h_pay" value="Payment attempt — §7" style="text;html=1;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+        <mxCell id="h_pay" value="Payment attempt — §7" style="text;html=1;whiteSpace=wrap;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="2020" y="164" width="620" height="34" as="geometry" />
         </mxCell>
         <mxCell id="pay_cr" value="CREATED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=14;fontStyle=1;" vertex="1" parent="1">
@@ -98,7 +97,7 @@ PUBLISHED AND db_now &lt; starts_at" style="text;html=1;align=left;verticalAlign
         <mxCell id="pay_ls" value="LATE_SUCCESS_REFUND_REQUIRED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="3400" y="540" width="300" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="h_can" value="Cancellation decision — §9  (table: cancellations)" style="text;html=1;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+        <mxCell id="h_can" value="Cancellation decision — §9  (table: cancellations)" style="text;html=1;whiteSpace=wrap;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="2020" y="884" width="620" height="34" as="geometry" />
         </mxCell>
         <mxCell id="can_rq" value="REQUESTED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=14;fontStyle=1;" vertex="1" parent="1">
@@ -110,13 +109,10 @@ PUBLISHED AND db_now &lt; starts_at" style="text;html=1;align=left;verticalAlign
         <mxCell id="can_rj" value="REJECTED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="2940" y="940" width="300" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="n_can" value="One table for all three types (RC-06):
-CUSTOMER_BOOKING, ADMIN_BOOKING, SHOWTIME.
-Reused key with a different target or
-fingerprint is an idempotency conflict." style="text;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#f5f5f5;strokeColor=#999999;fontSize=12;dashed=1;rounded=1;" vertex="1" parent="1">
+        <mxCell id="n_can" value="One table for all three types (RC-06):&lt;br&gt;CUSTOMER_BOOKING, ADMIN_BOOKING, SHOWTIME.&lt;br&gt;Reused key with a different target or&lt;br&gt;fingerprint is an idempotency conflict." style="text;html=1;whiteSpace=wrap;overflow=hidden;align=left;verticalAlign=top;spacing=10;fillColor=#f5f5f5;strokeColor=#999999;fontSize=12;dashed=1;rounded=1;" vertex="1" parent="1">
           <mxGeometry x="3400" y="930" width="380" height="120" as="geometry" />
         </mxCell>
-        <mxCell id="h_obx" value="Transactional outbox — §11" style="text;html=1;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+        <mxCell id="h_obx" value="Transactional outbox — §11" style="text;html=1;whiteSpace=wrap;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="2020" y="1304" width="620" height="34" as="geometry" />
         </mxCell>
         <mxCell id="obx_pd" value="PENDING" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=14;fontStyle=1;" vertex="1" parent="1">
@@ -131,7 +127,7 @@ fingerprint is an idempotency conflict." style="text;html=1;align=left;verticalA
         <mxCell id="obx_dl" value="DEAD_LETTER" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="3400" y="1360" width="300" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="h_rec" value="Reconciliation case — ADR-015" style="text;html=1;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+        <mxCell id="h_rec" value="Reconciliation case — ADR-015" style="text;html=1;whiteSpace=wrap;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
           <mxGeometry x="2020" y="1724" width="620" height="34" as="geometry" />
         </mxCell>
         <mxCell id="rec_op" value="OPEN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=14;fontStyle=1;" vertex="1" parent="1">
@@ -143,36 +139,13 @@ fingerprint is an idempotency conflict." style="text;html=1;align=left;verticalA
         <mxCell id="rec_un" value="UNRESOLVED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="2940" y="1780" width="300" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="n_rec" value="Opened by PAY-05/06/08/09/11b/13 and by
-showtime cancellation. PAY-05b opens none —
-initiation was never sent, so nothing is
-ambiguous. Nothing in MVP resolves a case
-by hand; operator scope is inspection only." style="text;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#f5f5f5;strokeColor=#999999;fontSize=12;dashed=1;rounded=1;" vertex="1" parent="1">
+        <mxCell id="n_rec" value="Opened by PAY-05/06/08/09/11b/13 and by&lt;br&gt;showtime cancellation. PAY-05b opens none —&lt;br&gt;initiation was never sent, so nothing is&lt;br&gt;ambiguous. Nothing in MVP resolves a case&lt;br&gt;by hand; operator scope is inspection only." style="text;html=1;whiteSpace=wrap;overflow=hidden;align=left;verticalAlign=top;spacing=10;fillColor=#f5f5f5;strokeColor=#999999;fontSize=12;dashed=1;rounded=1;" vertex="1" parent="1">
           <mxGeometry x="3400" y="1770" width="380" height="130" as="geometry" />
         </mxCell>
-        <mxCell id="n_lock" value="Global lock order — every competing action uses it
-
-  1. showtime row
-  2. showtime_seats, ordered by seat_id ASC
-  3. holds, then payments, then bookings, by id ASC
-  4. cancellation / reconciliation rows
-  5. audit and outbox rows last, in the same transaction
-
-Never acquire the showtime lock after a seat, hold, payment or booking lock.
-Retry the whole transaction on deadlock, never a partial mutation, and never
-under a new command identity." style="text;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;dashed=1;rounded=1;" vertex="1" parent="1">
+        <mxCell id="n_lock" value="Global lock order — every competing action uses it&lt;br&gt;&lt;br&gt;  1. showtime row&lt;br&gt;  2. showtime_seats, ordered by seat_id ASC&lt;br&gt;  3. holds, then payments, then bookings, by id ASC&lt;br&gt;  4. cancellation / reconciliation rows&lt;br&gt;  5. audit and outbox rows last, in the same transaction&lt;br&gt;&lt;br&gt;Never acquire the showtime lock after a seat, hold, payment or booking lock.&lt;br&gt;Retry the whole transaction on deadlock, never a partial mutation, and never&lt;br&gt;under a new command identity." style="text;html=1;whiteSpace=wrap;overflow=hidden;align=left;verticalAlign=top;spacing=10;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;dashed=1;rounded=1;" vertex="1" parent="1">
           <mxGeometry x="80" y="2200" width="1680" height="260" as="geometry" />
         </mxCell>
-        <mxCell id="n_key" value="Reading this diagram
-
-  white box      non-terminal state
-  green box      terminal state
-  solid arrow    normal path
-  dashed amber   exception, cancellation or reconciliation path
-
-A worker tick, HTTP request or callback receipt is only a request to attempt
-a transition — never proof that it is still eligible. Guards are re-evaluated
-after locks are held, using PostgreSQL time." style="text;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#f5f5f5;strokeColor=#999999;fontSize=12;dashed=1;rounded=1;" vertex="1" parent="1">
+        <mxCell id="n_key" value="Reading this diagram&lt;br&gt;&lt;br&gt;  white box      non-terminal state&lt;br&gt;  green box      terminal state&lt;br&gt;  solid arrow    normal path&lt;br&gt;  dashed amber   exception, cancellation or reconciliation path&lt;br&gt;&lt;br&gt;A worker tick, HTTP request or callback receipt is only a request to attempt&lt;br&gt;a transition — never proof that it is still eligible. Guards are re-evaluated&lt;br&gt;after locks are held, using PostgreSQL time." style="text;html=1;whiteSpace=wrap;overflow=hidden;align=left;verticalAlign=top;spacing=10;fillColor=#f5f5f5;strokeColor=#999999;fontSize=12;dashed=1;rounded=1;" vertex="1" parent="1">
           <mxGeometry x="2020" y="2200" width="1680" height="260" as="geometry" />
         </mxCell>
         <mxCell id="sme0" value="ST-03 publish → materialise inventory" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#4d4d4d;strokeWidth=1.5;fontSize=12;fontColor=#4d4d4d;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="st_draft" target="st_pub">
@@ -181,8 +154,7 @@ after locks are held, using PostgreSQL time." style="text;html=1;align=left;vert
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme1" value="ST-04 cancel — ADMIN, db_now &lt; starts_at,
-impact preview confirmed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="st_pub" target="st_can">
+        <mxCell id="sme1" value="ST-04 cancel — ADMIN, db_now &lt; starts_at,&lt;br&gt;impact preview confirmed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="st_pub" target="st_can">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
             </Array>
@@ -278,8 +250,7 @@ impact preview confirmed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme12" value="HLD-04/06 abandon or showtime cancel;
-HLD-05 third payment failure only" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="hld_ac" target="hld_rl">
+        <mxCell id="sme12" value="HLD-04/06 abandon or showtime cancel;&lt;br&gt;HLD-05 third payment failure only" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="hld_ac" target="hld_rl">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="460" y="1120" />
@@ -329,8 +300,7 @@ HLD-05 third payment failure only" style="edgeStyle=orthogonalEdgeStyle;rounded=
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sme18" value="PAY-04 valid failure — hold survives
-unless this is the third" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.25;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_pd" target="pay_fl">
+        <mxCell id="sme18" value="PAY-04 valid failure — hold survives&lt;br&gt;unless this is the third" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=10;exitX=1.0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0;entryY=0.25;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=none;startFill=0;endArrow=block;endFill=0;strokeColor=#d79b00;strokeWidth=1.5;fontSize=12;fontColor=#d79b00;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1" source="pay_pd" target="pay_fl">
           <mxGeometry relative="1" x="-0.6" as="geometry">
             <Array as="points">
               <mxPoint x="2900" y="280" />
