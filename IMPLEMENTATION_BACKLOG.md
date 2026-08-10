@@ -320,6 +320,55 @@ companion links.
 
 **Trace:** FR-037–039; PP-10; ADR-005/012; NFR-010.
 
+```text
+Status:              DONE (2026-08-10)
+Requirement IDs:     FR-037, FR-038; PP-10; ADR-005/012; NFR-010
+Gate/P0 IDs:         G1, G2
+Red evidence:        docs/evidence/C2-01/red.md — 31 of 37 cases failed on
+                     missing classes before any model or migration existed.
+Green evidence:      docs/evidence/C2-01/green.md — 40 integration tests, and
+                     83 tests / 196 assertions across the whole suite with Pint
+                     and PHPStan clean.
+Implementation notes: covers migration sequencing steps 4 and 5 — movies,
+                     venues, halls, seats, seat_companion_links. Showtimes are
+                     C2-02. Roles and role_user (step 3) are deliberately not
+                     built: nothing in C2-01 authorizes anything, and the backlog
+                     forbids pre-creating empty layers. They arrive with the
+                     first authorization test in O6-01.
+
+                     CHECK constraints are raw DDL because Laravel's schema
+                     builder has no first-class support for them: runtime > 0,
+                     layout_version > 0, sort_order >= 0, seat_type membership
+                     derived from App\Enums\SeatType so the enum and the
+                     constraint cannot drift.
+
+                     The seat_companion_links cross-row rules are a DEFERRABLE
+                     INITIALLY DEFERRED constraint trigger, since a CHECK cannot
+                     read the referenced seat rows. Because RefreshDatabase never
+                     commits, the tests force it with SET CONSTRAINTS ALL
+                     IMMEDIATE — without that they would pass without the trigger
+                     ever running. Verified deferrable in pg_trigger.
+
+                     Venue and hall FKs restrict on delete, so a referenced hall
+                     or seat cannot be deleted; is_active is the intended path.
+
+                     public_id is UUID v4 assigned by App\Concerns\HasPublicId,
+                     with gen_random_uuid() as the database default. Not v7 —
+                     a v7 value encodes its creation timestamp and public_id is
+                     handed to unauthenticated clients.
+
+                     Two real defects surfaced. migrate:fresh drops tables but
+                     leaves standalone functions, so the trigger function needed
+                     CREATE OR REPLACE or the second suite run collided. And
+                     PHPStan rejected chr() in SeatFactory as unbounded, which
+                     was fixed by computing the row label from a fixed alphabet
+                     rather than by silencing the check.
+Open decisions:      D21 — companion-seat adjacency is undefined in every source
+                     document. The four unambiguous rules are enforced; adjacency
+                     is not. Recorded in BASELINE_RECONCILIATION.md. Must close
+                     before C2-03 lets an operator declare pairs freely.
+```
+
 ### C2-02 — Showtime draft and publication
 
 Publishing must transactionally create exactly one inventory row for every

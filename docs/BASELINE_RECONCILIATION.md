@@ -254,6 +254,29 @@ state at the time of reconciliation; see
 | D14 | QR payload and rotation detail | `P5-03` QR slice | **Still open** |
 | D15 / PD-08 | Admin roles and cancellation authority | `O6-03`, `BKG-03` | Role split closed — `ADR-017`. Hall/seat versioning still open |
 | D20 | Named approvers for each governance role | G0 multi-role sign-off | **Still open** |
+| D21 | Companion-seat adjacency definition | Adjacency enforcement in `seat_companion_links` | **Still open** — raised during `C2-01`, see below |
+
+### D21 — What "adjacent" means for a companion seat
+
+`LOGICAL_ERD.md` §2.2 requires the `seat_companion_links` constraint trigger to
+enforce that "the declared layout relationship is valid/adjacent according to the
+hall layout". No document defines adjacency. Candidate readings, all defensible:
+
+- consecutive `sort_order` within the hall;
+- same `row_label` with consecutive `seat_number`;
+- neighbouring `x_position`/`y_position` on the seat grid, which is the only
+  reading that survives an aisle splitting a row.
+
+`C2-01` implemented the four unambiguous cross-row rules — same hall, accessible
+side classified `ACCESSIBLE`, companion side classified `COMPANION`, both seats
+active — and left adjacency out rather than picking a reading in code. The pair is
+still safe: `sort_order` uniqueness plus the two unique keys prevent a seat
+joining two pairs, and nothing about hold or booking correctness depends on the
+two seats being physically neighbouring.
+
+Needed before the hall layout editor lets an operator declare pairs freely
+(`C2-03`). Until then pairs come from seeded fixtures, where adjacency is
+controlled by whoever writes the fixture.
 
 One finding of this record turned out to be incomplete. `RC-03` removed the
 stored `ENDED` showtime state, which was right — but it left `ST-04` guarded only
