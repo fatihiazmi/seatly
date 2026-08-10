@@ -2,16 +2,19 @@
 
 **Sprint:** 0 — Discovery and Foundation  
 **Review status:** Exited 2026-08-10 — Product Owner accepted the state models and
-the logical ERD. `D20` remains open, so the other governance sign-offs are still
-unrecorded.  
+the logical ERD. `D20` is now closed: every role is named in `BRD.md` §19. The
+other sign-offs remain Pending because their evidence does not exist yet, not
+because nobody holds the role.  
 **Laravel application scaffold:** Explicitly excluded from this review package
 
 ## Approval scope of these ticks
 
 Every tick below records **Product Owner approval only**, given 2026-08-10.
 Sponsor, Project Manager, Business Analyst, Technical Lead, QA, Security,
-Accessibility, and Operations sign-offs are all still pending in `BRD.md` §19, and
-`D20` — naming those approvers — is open (`RC-12`).
+Accessibility, and Operations sign-offs are all still Pending in `BRD.md` §19.
+`D20` closed on 2026-08-10 — those roles are now named — but naming an approver
+is not approving: Technical Recommendation falls due at G3, QA Evidence and the
+security and accessibility records at G5, and Release Authorization at G6.
 
 In a solo project one person may hold several roles, but `BRD.md` §4.2 requires
 Business Acceptance, Technical Recommendation, QA Evidence, and Release
@@ -84,9 +87,12 @@ Production remains No-Go until every P0 release gate has reproducible evidence.
 
 Neither blocks an implementation slice:
 
-- `D14` — QR payload detail and rotation policy, needed before the `P5-03` QR slice.
-- `D20` — named approvers per governance role.
+- `D14` — QR payload detail and rotation policy. **Deferred to Phase 5 by
+  decision on 2026-08-10**, to be settled at the `P5-03` slice.
+- ~~`D20` — named approvers per governance role~~ — closed 2026-08-10. All roles
+  are held by Fatihi and recorded per role in `BRD.md` §19. The four acceptance
+  types are still recorded separately against G3, G5 and G6.
 - ~~Hall and seat versioning rules after a showtime has been published
   (`FR-038`, `FR-041`)~~ — closed 2026-08-10 by `ADR-019`.
-- `BO-08` — the exact accessibility standard to certify against, as distinct
-  from the WCAG 2.2 AA-oriented journey already approved.
+- ~~`BO-08` — the exact accessibility standard to certify against~~ — closed
+  2026-08-10: WCAG 2.2 Level AA, critical journey only.

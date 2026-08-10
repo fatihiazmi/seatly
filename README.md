@@ -10,7 +10,7 @@ The project is designed to demonstrate more than CRUD: atomic multi-seat holds, 
 - Council verdict: Conditional Go
 - Current phase: Phase 1 — Sprint 0 exited 2026-08-10; Laravel initialized the same day (`F1-01`–`F1-03` done, `F1-04` written but unrun)
 - Product baseline: MVP policies and operational targets approved on 2026-08-10; `PD-01`–`PD-10` resolved the same day as `ADR-015`, `ADR-016`, `ADR-017`
-- Open decisions remaining: `D14` (QR payload detail), `D20` (named approvers), `BO-08` (exact accessibility standard) — none block a slice. `D21` closed as `ADR-018`; hall/seat versioning closed as `ADR-019`
+- Open decisions remaining: `D14` (QR payload detail) only, deferred to Phase 5 by decision. `D2`–`D5` closed by citation, `D20` closed (all roles held by Fatihi), `BO-08` fixed at WCAG 2.2 AA critical-journey, `D21` closed as `ADR-018`, hall/seat versioning as `ADR-019`, venue deactivation as `ADR-020`
 - Baseline reconciliation (`S0-01`) applied 2026-08-10 — see [docs/BASELINE_RECONCILIATION.md](docs/BASELINE_RECONCILIATION.md)
 - Stack direction: Laravel + Vue 3/Inertia + PostgreSQL
 - Production promotion: No-Go until all P0 release gates pass

@@ -34,4 +34,20 @@ class Venue extends Model
     {
         return $this->hasMany(Hall::class);
     }
+
+    /**
+     * True while any hall in this venue has an upcoming published showtime,
+     * during which the venue cannot be deactivated (`ADR-020`).
+     *
+     * The database enforces this with a trigger; this is the read used to refuse
+     * the edit before attempting it. Both derive "upcoming" from the PostgreSQL
+     * clock, so they cannot disagree.
+     */
+    public function hasFrozenHall(): bool
+    {
+        return Showtime::query()
+            ->onSale()
+            ->whereIn('hall_id', $this->halls()->select('id'))
+            ->exists();
+    }
 }

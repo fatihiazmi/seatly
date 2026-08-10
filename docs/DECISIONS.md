@@ -711,6 +711,50 @@ geometry stops being descriptive and starts driving allocation.
 
 ---
 
+## ADR-020 — Venue deactivation follows the hall freeze
+
+**Status:** Accepted (Product Owner approval: 2026-08-10). Closes the venue half
+of `FR-041`.
+
+`venues.is_active` cannot change while any hall in the venue has an upcoming
+published showtime. Descriptive venue attributes — name, address fields,
+timezone — stay editable.
+
+### Context
+
+`ADR-019` froze `halls.is_active` so a showtime on sale could not sit in a
+retired hall, but its scope was explicitly halls and seats. Venue deactivation is
+the same shape one level up and was left with `FR-041` rather than silently
+folded into that approval.
+
+Publication already guards on the venue being active (`ST-03`), so a showtime
+cannot be published into a retired venue. Without this decision the reverse
+remained possible: publish, then retire the venue underneath.
+
+### Decision
+
+Same rule, same derived scope. `venue_has_frozen_hall(venue_id)` is a `STABLE`
+SQL function joining `showtimes` to `halls`, using the same
+`status = 'PUBLISHED' AND transaction_timestamp() < starts_at` test as
+`hall_layout_is_frozen`. Enforced by a `BEFORE UPDATE` trigger on `venues`, with
+`Venue::hasFrozenHall()` as the application-side read.
+
+### Consequences
+
+- A venue with any hall still selling cannot be retired; wait out or cancel those
+  showtimes first.
+- The venue admin screens can rely on the database refusing the edit rather than
+  on the UI remembering to check.
+- Seat and hall geometry, labels and names remain editable throughout, exactly as
+  under `ADR-019`.
+
+### Revisit trigger
+
+Same as `ADR-019` — operators report the freeze blocking legitimate work often
+enough to cost real time.
+
+---
+
 ## Rejected MVP technologies/features
 
 - Spring Boot, ASP.NET Core, and other backend stacks for this project direction.

@@ -87,7 +87,7 @@ An asynchronous exception shall never be silently discarded or silently converte
 | BO-05 | Preserve ambiguous outcomes | Late or uncertain payment outcomes enter an explicit, inspectable reconciliation state | Accepted |
 | BO-06 | Support customer self-service visibility | Confirmed booking details, reference, status, and QR are available only to the booking owner and authorized operator | Accepted |
 | BO-07 | Support controlled cinema operations | Authorized operators manage catalogue/showtimes and inspect booking, inventory, exception, and audit state | Accepted |
-| BO-08 | Provide an inclusive journey | The critical booking flow passes approved keyboard, screen-reader, focus, error, and non-colour-only checks | Accepted; exact standard Open |
+| BO-08 | Provide an inclusive journey | The critical booking flow passes approved keyboard, screen-reader, focus, error, and non-colour-only checks | Accepted. Standard fixed 2026-08-10: **WCAG 2.2 Level AA**, critical journey only — browse, seat selection, hold countdown, payment, confirmation, cancellation. Operator and admin screens are out of certification scope |
 | BO-09 | Demonstrate operational recoverability | Deployment, migration rehearsal, clean-environment restore, and integrity reconciliation pass before production approval | Accepted |
 | BO-10 | Deliver within an exit-gated baseline | Progress is assessed against the 16-week part-time baseline and milestone evidence; elapsed dates cannot override a failed gate | Accepted |
 
@@ -107,7 +107,7 @@ An asynchronous exception shall never be silently discarded or silently converte
 
 ### 4.2 Project governance roles
 
-Named individuals are Open. One person may hold multiple roles in a solo project, but Business Acceptance, Technical Recommendation, QA Evidence, and Release Authorization shall be recorded separately.
+All roles are held by Fatihi (`D20`, closed 2026-08-10). One person may hold multiple roles in a solo project, but Business Acceptance, Technical Recommendation, QA Evidence, and Release Authorization shall still be recorded **separately**, each against its own gate and its own evidence — naming one person does not let one signature satisfy four.
 
 | Role | Primary accountability |
 |---|---|
@@ -299,7 +299,7 @@ These policies were approved by the Product Owner on 2026-08-10 and are baseline
 | FR-038 | Authorized admins maintain fixed halls/seats while protecting historical booking integrity | Accepted; post-use edit rules closed by `ADR-019` |
 | FR-039 | Authorized admins create/update showtimes against valid movie, venue, hall, and timing data | Accepted |
 | FR-040 | Authorized admins publish and cancel showtimes | Accepted |
-| FR-041 | Prevent or explicitly resolve destructive admin changes conflicting with active holds/bookings | Accepted; hall/seat rules closed by `ADR-019`. Venue deactivation still Open |
+| FR-041 | Prevent or explicitly resolve destructive admin changes conflicting with active holds/bookings | Accepted; hall/seat rules closed by `ADR-019`, venue deactivation by `ADR-020` |
 | FR-042 | Authorized admins inspect booking and inventory by cinema/showtime criteria | Accepted |
 | FR-043 | Audit security-relevant and business-state-changing actions with actor/system, subject, time, correlation, and result | Accepted |
 | FR-044 | Authorized admins inspect audit history without altering it through normal functions | Accepted |
@@ -323,7 +323,7 @@ These policies were approved by the Product Owner on 2026-08-10 and are baseline
 | RULE-011 | Maximum eight seats per booking | Accepted |
 | RULE-012 | Hold expires five minutes after authoritative creation | Accepted |
 | RULE-013 | Hold cannot be extended | Accepted |
-| RULE-014 | One price applies to all seats | Accepted; currency/tax/fee source Open |
+| RULE-014 | One price applies to all seats | Accepted; currency is `MYR` per `PP-11`, and tax/fee engines are an explicit non-goal (`LOGICAL_ERD.md` §8) |
 | RULE-015 | Customer cancellation is eligible only while PostgreSQL time is strictly earlier than scheduled start minus the cutoff snapshotted on the booking, default 120 minutes; equality is ineligible | Accepted 2026-08-10 (`ADR-016`) |
 | RULE-016 | Eligible cancelled seats return for resale while the showtime remains on sale | Accepted |
 | RULE-017 | QR is display-only, not an admission-validation credential | Accepted |
@@ -599,10 +599,10 @@ A proposed change to scope, non-goals, invariants, policy, timeline, architectur
 | ID | Decision | Owner | Required by |
 |---|---|---|---|
 | D1 | Resolved 2026-08-10: browsing is public; authentication begins at the hold request. Recorded in `ADR-014` and `RULE-010` | Product Owner | Closed |
-| D2 | Maximum seat count and scope (per hold/customer/showtime) | Product Owner | G0 |
-| D3 | Hold duration, start instant, rounding, authoritative clock | Product Owner + Tech Lead | G0 |
-| D4 | No-extension policy and treatment of accessibility/system interruption | Product Owner | G0 |
-| D5 | Currency, tax/fee, rounding, and price snapshot policy | Product Owner | G0 |
+| D2 | Resolved 2026-08-10 by citation: `PP-02` (maximum eight seats per booking) is Accepted, and `RULE-003`/`RULE-011` scope it to one hold for one showtime | Product Owner | Closed |
+| D3 | Resolved 2026-08-10 by citation: `PP-03` fixes five minutes from authoritative creation and `ADR-004` makes PostgreSQL the clock. No rounding arises — expiry is a `timestamptz` comparison | Product Owner + Tech Lead | Closed |
+| D4 | Resolved 2026-08-10 by citation: `PP-04` (no extension) is Accepted. Interruption is covered by `ADR-015` — the hold survives payment failure for up to three attempts within its original expiry | Product Owner | Closed |
+| D5 | Resolved 2026-08-10 by citation: `PP-11` fixes `MYR` in integer sen, so no rounding arises; the price snapshot is `ADR-005` plus `LOGICAL_ERD.md` §5; tax and fee engines are excluded by `LOGICAL_ERD.md` §8 | Product Owner | Closed |
 | D6 | Resolved 2026-08-10: deadline, idempotency identity and callback validation fixed by `ADR-015`; the simulator implements that contract | Product Owner + Tech Lead | Closed |
 | D7 | Resolved 2026-08-10: timeout at hold expiry, 24-hour window, `UNRESOLVED` closure that reopens on late success — `ADR-015` | Product Owner + Operations | Closed |
 | D8 | Resolved 2026-08-10: PostgreSQL commit order is the sole tiebreak — `ADR-015` | Product Owner + Tech Lead | Closed |
@@ -611,13 +611,13 @@ A proposed change to scope, non-goals, invariants, policy, timeline, architectur
 | D11 | Resolved 2026-08-10: strict inequality against a snapshotted cutoff, default 120 minutes — `ADR-016` | Product Owner | Closed |
 | D12 | Resolved: `PP-07` and `RULE-016` already require eligible cancelled seats to return to availability, and `INV-06` releases them in the cancellation transaction itself | Product Owner | Closed |
 | D13 | Resolved 2026-08-10: effects, guards and impact preview fixed by `ADR-017` | Product Owner | Closed |
-| D14 | QR purpose, payload, privacy, rotation | Product Owner + Security | Before G4 |
-| D15 | MVP portion resolved 2026-08-10: `OPERATOR`/`ADMIN` split and cancellation authority — `ADR-017`. Hall/seat versioning remains open | Product Owner + Security | Partly closed; versioning before G2 |
+| D14 | **Deferred to Phase 5 by decision, 2026-08-10**, not by oversight. `PP-09` already fixes QR as display-only and not an admission credential; payload, privacy and rotation are settled at the `P5-03` slice, when booking and payment exist to design against | Product Owner + Security | Open, scheduled |
+| D15 | Resolved 2026-08-10: `OPERATOR`/`ADMIN` split and cancellation authority — `ADR-017`; hall/seat edit policy after publication — `ADR-019` | Product Owner + Security | Closed |
 | D16 | Resolved 2026-08-10: accessible/companion policy and WCAG-oriented P0 journey recorded in `MVP_POLICY_BASELINE.md` | Product Owner + Accessibility | Approved; commercial review required |
 | D17 | Resolved 2026-08-10: load, latency, availability, and worker-lag targets recorded in `MVP_POLICY_BASELINE.md` | Product Owner + Tech Lead | Approved engineering baseline |
 | D18 | Resolved 2026-08-10: RPO/RTO, backup retention, and restore frequency recorded in `MVP_POLICY_BASELINE.md` | Product Owner + Operations | Approved engineering baseline |
 | D19 | Resolved 2026-08-10: data retention and deletion defaults recorded in `MVP_POLICY_BASELINE.md` | Product Owner + Security | Approved portfolio baseline; legal review before commercial use |
-| D20 | Named Sponsor, Product Owner, Tech Lead, QA, Accessibility, Security, and Operations approvers | Sponsor/Project authority | G0 |
+| D20 | Resolved 2026-08-10: all roles held by Fatihi, recorded per role in §19. Naming is not approving — Business Acceptance, Technical Recommendation, QA Evidence and Release Authorization remain four separate records against G3, G5 and G6 | Sponsor/Project authority | Closed |
 
 ---
 
@@ -625,15 +625,15 @@ A proposed change to scope, non-goals, invariants, policy, timeline, architectur
 
 | Role | Name | Decision | Date | Signature/reference |
 |---|---|---|---|---|
-| Business Sponsor | Open | Pending |  |  |
-| Product Owner | Fatihi | Approved with conditions | 2026-08-10 | MVP policies PP-01–PP-13 approved (`ADR-009`, `ADR-012`, `ADR-013`); browse boundary resolved (`ADR-014`); `PD-01`–`PD-10` resolved (`ADR-015`, `ADR-016`, `ADR-017`), closing `D6`–`D13` and the MVP portion of `D15`. `D14`, `D20` and hall/seat versioning remain open |
-| Project Manager | Open | Pending |  |  |
-| Business Analyst | Open | Pending |  |  |
-| Technical Lead | Open | Pending |  |  |
-| QA Lead | Open | Pending |  |  |
-| Security Reviewer | Open | Pending |  |  |
-| Accessibility Owner | Open | Pending |  |  |
-| Operations/Release Owner | Open | Pending |  |  |
+| Business Sponsor | Fatihi | Pending |  | Business Go/No-Go, at G6 |
+| Product Owner | Fatihi | Approved with conditions | 2026-08-10 | MVP policies PP-01–PP-13 approved (`ADR-009`, `ADR-012`, `ADR-013`); browse boundary resolved (`ADR-014`); `PD-01`–`PD-10` resolved (`ADR-015`, `ADR-016`, `ADR-017`), closing `D6`–`D13` and the MVP portion of `D15`. hall/seat versioning closed (`ADR-019`), companion adjacency closed (`ADR-018`), `D20` closed, `BO-08` closed. `D14` deferred to Phase 5 by decision |
+| Project Manager | Fatihi | Pending |  | Gate coordination |
+| Business Analyst | Fatihi | Pending |  | Requirements and traceability |
+| Technical Lead | Fatihi | Pending |  | **Technical Recommendation** — due at G3, the real-PostgreSQL concurrency gate |
+| QA Lead | Fatihi | Pending |  | **QA Evidence** — due at G5, needs the evidence pack to exist first |
+| Security Reviewer | Fatihi | Pending |  | Authorization, IDOR, privacy and dependency evidence, at G5 |
+| Accessibility Owner | Fatihi | Pending |  | WCAG 2.2 AA critical-journey evidence (`BO-08`), at G5 |
+| Operations/Release Owner | Fatihi | Pending |  | **Release Authorization** — due at G6 |
 
 ### BRD approval effect
 

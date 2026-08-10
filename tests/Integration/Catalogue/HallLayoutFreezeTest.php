@@ -260,6 +260,38 @@ class HallLayoutFreezeTest extends IntegrationTestCase
         $this->assertSame($before, $hall->fresh()->layout_version);
     }
 
+    // --- venues (ADR-020) -------------------------------------------------
+
+    public function test_a_venue_cannot_be_deactivated_while_one_of_its_halls_is_frozen(): void
+    {
+        // Same rule as halls.is_active, extended one level up so a published
+        // showtime cannot end up sitting in a retired venue. ADR-020.
+        [$hall] = $this->frozenHall();
+
+        $this->expectException(QueryException::class);
+
+        $hall->venue->update(['is_active' => false]);
+    }
+
+    public function test_a_venue_may_be_deactivated_when_no_hall_is_frozen(): void
+    {
+        $hall = Hall::factory()->create();
+        Seat::factory()->for($hall)->create();
+
+        $hall->venue->update(['is_active' => false]);
+
+        $this->assertFalse($hall->venue->fresh()->is_active);
+    }
+
+    public function test_a_venue_may_be_renamed_while_a_hall_is_frozen(): void
+    {
+        [$hall] = $this->frozenHall();
+
+        $hall->venue->update(['name' => 'Seatly Mid Valley (North)']);
+
+        $this->assertSame('Seatly Mid Valley (North)', $hall->venue->fresh()->name);
+    }
+
     // --- the application-level guard -------------------------------------
 
     public function test_a_hall_reports_whether_its_layout_is_frozen(): void
@@ -269,5 +301,14 @@ class HallLayoutFreezeTest extends IntegrationTestCase
 
         $this->assertTrue($frozen->layoutIsFrozen());
         $this->assertFalse($open->layoutIsFrozen());
+    }
+
+    public function test_a_venue_reports_whether_any_of_its_halls_is_frozen(): void
+    {
+        [$frozen] = $this->frozenHall();
+        $open = Hall::factory()->create();
+
+        $this->assertTrue($frozen->venue->hasFrozenHall());
+        $this->assertFalse($open->venue->hasFrozenHall());
     }
 }
