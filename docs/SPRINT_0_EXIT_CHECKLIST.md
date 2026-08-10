@@ -86,7 +86,7 @@ Neither blocks an implementation slice:
 
 - `D14` — QR payload detail and rotation policy, needed before the `P5-03` QR slice.
 - `D20` — named approvers per governance role.
-- Hall and seat versioning rules after a showtime has been published (`FR-038`,
-  `FR-041`), needed before destructive catalogue edits in `C2-03`.
+- ~~Hall and seat versioning rules after a showtime has been published
+  (`FR-038`, `FR-041`)~~ — closed 2026-08-10 by `ADR-019`.
 - `BO-08` — the exact accessibility standard to certify against, as distinct
   from the WCAG 2.2 AA-oriented journey already approved.

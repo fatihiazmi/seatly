@@ -138,9 +138,10 @@ At minimum, reconcile or preserve blockers related to:
 of 2026-08-10 closed all but three. What `S0-06` still tracks:
 
 - `D14` — QR payload detail, privacy and rotation, before the `P5-03` QR slice;
-- hall and seat versioning after publication (`FR-038`, `FR-041`), before `C2-03`
-  implements destructive edit rules;
 - `D20` — named approvers per governance role, for the G0 multi-role sign-off.
+
+Closed since: companion adjacency (`ADR-018`, raised as `D21` during `C2-01`) and
+hall/seat versioning after publication (`ADR-019`), both on 2026-08-10.
 
 **Trace:** D6–D10, D13–D15; RULE-022–025; FR-019/021/025–027/032/036/038/041.
 

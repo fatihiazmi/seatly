@@ -119,7 +119,7 @@ Constraints:
 - **UQ:** `(venue_id, code)`
 - **CK:** `layout_version > 0`
 
-Structural changes are prohibited once a published showtime references the hall. Deactivation is preferred over deletion.
+Structural changes are prohibited while an **upcoming** published showtime references the hall — the sellable seat set, seat identity, ordering and classification are frozen, while descriptive attributes stay editable (`ADR-019`). `layout_version` increments on every frozen-category change. Deactivation is preferred over deletion.
 
 #### `seats`
 

@@ -610,6 +610,107 @@ and mandatory, or `BO-08` closing on a standard that prescribes adjacency.
 
 ---
 
+## ADR-019 — Hall and seat edit policy after publication
+
+**Status:** Accepted (Product Owner approval: 2026-08-10). Closes the hall/seat
+versioning item open against `FR-038` and `FR-041`.
+
+A hall's **sellable seat set, seat identity, ordering and classification** are
+frozen while an upcoming published showtime references that hall. Purely
+descriptive attributes stay editable. `halls.layout_version` increments on every
+frozen-category change.
+
+### Context
+
+`ADR-005` states that "structural hall edits are blocked after affected showtimes
+are published", and `DOMAIN_STATE_MODELS.md` §4.3 forbids "structural hall edits
+that change a published showtime's materialized seat meaning". Neither defines
+*structural*, *affected*, or for how long — so `FR-038` and `FR-041` both carried
+"detailed rules Open" and `C2-03` was blocked.
+
+The decisive fact is that **booking history is already protected by snapshots,
+not by freezing the hall**. `LOGICAL_ERD.md` §5 has `hold_items` capture "exact
+seat labels/types and line prices" and `booking_items` capture
+`seat_label_snapshot`, `row_label_snapshot`, `seat_number_snapshot` and
+`seat_type_snapshot`, and states that "later catalogue edits or seat deactivation
+cannot alter booking history".
+
+So the freeze is not there to protect history. It is there to protect the
+**materialized inventory** created by `ADR-005`: `showtime_seats` is written once
+at publication, and a later layout change would leave it describing a hall that
+no longer exists.
+
+### Decision
+
+**Frozen** while a `PUBLISHED` showtime with `transaction_timestamp() < starts_at`
+references the hall:
+
+| Change | Why it is frozen |
+|---|---|
+| Adding a seat | The published showtime has no inventory row for it, so it is physically present but unsellable and invisible |
+| Deleting a seat | Already refused by the restrict foreign key once inventory exists |
+| `seats.is_active` | Removes a seat that already has an inventory row |
+| `seats.hall_id` | Moves a seat out from under existing inventory |
+| `seats.row_label` | Breaks the `ADR-018` adjacency rule for existing pairs |
+| `seats.seat_number` | Part of seat identity, unique per hall |
+| `seats.sort_order` | Breaks `ADR-018` adjacency and the canonical display order |
+| `seats.seat_type` | Breaks companion pairing and the accessible-seat rules |
+| `halls.is_active` | Would leave an upcoming published showtime in a retired hall |
+
+**Editable at any time:** `halls.name`, `halls.code`, `seats.display_label`,
+`seats.x_position`, `seats.y_position`, and all venue address fields. These are
+descriptive: bookings and holds snapshot the seat label they sold, so changing it
+cannot rewrite what a customer bought.
+
+**Freeze scope.** The same derived on-sale rule used everywhere else
+(`status = 'PUBLISHED' AND transaction_timestamp() < starts_at`). Once every
+showtime in a hall has started or been cancelled, the hall is editable again.
+Past bookings remain correct because of their snapshots.
+
+**`halls.layout_version`** increments on any frozen-category change. By
+definition that can only happen while the hall is not frozen. It is a cheap audit
+fact answering "has this layout changed since?", not a version graph: previous
+layouts are not retained.
+
+**Enforcement** is a database trigger, with an application guard above it that
+returns named reason codes. The trigger is authoritative because a direct SQL
+write must not be able to corrupt published inventory.
+
+### Rejected alternatives
+
+**Hard freeze** — nothing on the hall or its seats changes after publication, not
+even a typo in a display label. Simplest to state, but an operator would have to
+cancel and re-create a showtime to fix a spelling mistake, and the snapshots make
+that caution unnecessary.
+
+**Copy-on-write layout versions** — a structural edit clones the hall into a new
+version and published showtimes keep the old one. Operators are never blocked,
+but `LOGICAL_ERD.md` §8 explicitly lists "separate seat-layout version graph"
+among the premature abstractions to avoid, and it would add a version dimension
+to every seat, inventory, hold-item and booking-item lookup in the system.
+
+**Freeze forever once published** — a hall that has ever hosted a published
+showtime could never be edited again, forcing operators to create a replacement
+hall for any change.
+
+### Consequences
+
+- `C2-03` is unblocked and implements exactly this table.
+- An operator correcting a real layout mistake must cancel or wait out the
+  upcoming published showtimes for that hall. This is intended: the alternative
+  is inventory that no longer describes the room.
+- `halls.layout_version` gains a defined meaning for the first time.
+- Venue deactivation with upcoming published showtimes is the same class of
+  problem and is **not** covered here; `FR-041` still owns it.
+
+### Revisit trigger
+
+Operators report the freeze blocking legitimate corrections often enough to cost
+real time, a hall needs restructuring while showtimes are on sale, or seat
+geometry stops being descriptive and starts driving allocation.
+
+---
+
 ## Rejected MVP technologies/features
 
 - Spring Boot, ASP.NET Core, and other backend stacks for this project direction.

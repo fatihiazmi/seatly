@@ -252,7 +252,7 @@ state at the time of reconciliation; see
 | D11 / PD-07 | Exact cancellation boundary | `O6-02` boundary tests | Closed — `ADR-016` |
 | D13 / PD-09, PD-10 | Showtime-cancellation effects and terminality | `O6-03` | Closed — `ADR-017`, amended |
 | D14 | QR payload and rotation detail | `P5-03` QR slice | **Still open** |
-| D15 / PD-08 | Admin roles and cancellation authority | `O6-03`, `BKG-03` | Role split closed — `ADR-017`. Hall/seat versioning still open |
+| D15 / PD-08 | Admin roles and cancellation authority | `O6-03`, `BKG-03` | Role split closed — `ADR-017`. Hall/seat versioning closed — `ADR-019` |
 | D20 | Named approvers for each governance role | G0 multi-role sign-off | **Still open** |
 | D21 | Companion-seat adjacency definition | Adjacency enforcement in `seat_companion_links` | Closed — `ADR-018` |
 

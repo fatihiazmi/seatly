@@ -296,10 +296,10 @@ These policies were approved by the Product Owner on 2026-08-10 and are baseline
 | ID | Functional requirement | Status |
 |---|---|---|
 | FR-037 | Authorized admins create/update/activate/deactivate/inspect movies and venues | Accepted |
-| FR-038 | Authorized admins maintain fixed halls/seats while protecting historical booking integrity | Accepted; post-use edit rules Open |
+| FR-038 | Authorized admins maintain fixed halls/seats while protecting historical booking integrity | Accepted; post-use edit rules closed by `ADR-019` |
 | FR-039 | Authorized admins create/update showtimes against valid movie, venue, hall, and timing data | Accepted |
 | FR-040 | Authorized admins publish and cancel showtimes | Accepted |
-| FR-041 | Prevent or explicitly resolve destructive admin changes conflicting with active holds/bookings | Accepted; detailed rules Open |
+| FR-041 | Prevent or explicitly resolve destructive admin changes conflicting with active holds/bookings | Accepted; hall/seat rules closed by `ADR-019`. Venue deactivation still Open |
 | FR-042 | Authorized admins inspect booking and inventory by cinema/showtime criteria | Accepted |
 | FR-043 | Audit security-relevant and business-state-changing actions with actor/system, subject, time, correlation, and result | Accepted |
 | FR-044 | Authorized admins inspect audit history without altering it through normal functions | Accepted |
