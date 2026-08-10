@@ -36,10 +36,12 @@ class SeatCompanionLinkTest extends IntegrationTestCase
     {
         $hall = Hall::factory()->create();
 
+        // row_label is set explicitly: adjacency requires the same row, and the
+        // factory's running sequence would otherwise decide it for us.
         return [
             $hall,
-            Seat::factory()->for($hall)->accessible()->create(['sort_order' => 0]),
-            Seat::factory()->for($hall)->companion()->create(['sort_order' => 1]),
+            Seat::factory()->for($hall)->accessible()->create(['row_label' => 'F', 'sort_order' => 0]),
+            Seat::factory()->for($hall)->companion()->create(['row_label' => 'F', 'sort_order' => 1]),
         ];
     }
 
@@ -171,6 +173,100 @@ class SeatCompanionLinkTest extends IntegrationTestCase
     {
         [, $accessible, $companion] = $this->hallWithPairableSeats();
         $companion->update(['is_active' => false]);
+
+        SeatCompanionLink::create([
+            'accessible_seat_id' => $accessible->id,
+            'companion_seat_id' => $companion->id,
+        ]);
+
+        $this->expectException(QueryException::class);
+
+        $this->forceDeferredConstraints();
+    }
+
+    public function test_a_pair_must_sit_in_the_same_row(): void
+    {
+        // ADR-018.
+        $hall = Hall::factory()->create();
+        $accessible = Seat::factory()->for($hall)->accessible()->create(['row_label' => 'F', 'sort_order' => 9]);
+        $companion = Seat::factory()->for($hall)->companion()->create(['row_label' => 'G', 'sort_order' => 10]);
+
+        SeatCompanionLink::create([
+            'accessible_seat_id' => $accessible->id,
+            'companion_seat_id' => $companion->id,
+        ]);
+
+        $this->expectException(QueryException::class);
+
+        $this->forceDeferredConstraints();
+    }
+
+    public function test_a_pair_must_be_consecutive_in_sort_order(): void
+    {
+        // A seat sitting between the two is not a pair, however the operator
+        // describes it. ADR-018.
+        $hall = Hall::factory()->create();
+        $accessible = Seat::factory()->for($hall)->accessible()->create(['row_label' => 'F', 'sort_order' => 0]);
+        Seat::factory()->for($hall)->create(['row_label' => 'F', 'sort_order' => 1]);
+        $companion = Seat::factory()->for($hall)->companion()->create(['row_label' => 'F', 'sort_order' => 2]);
+
+        SeatCompanionLink::create([
+            'accessible_seat_id' => $accessible->id,
+            'companion_seat_id' => $companion->id,
+        ]);
+
+        $this->expectException(QueryException::class);
+
+        $this->forceDeferredConstraints();
+    }
+
+    public function test_the_companion_may_sit_on_either_side_of_the_accessible_seat(): void
+    {
+        // Adjacency is symmetric: |sort_order difference| = 1, not "companion
+        // must come second". ADR-018.
+        $hall = Hall::factory()->create();
+        $companion = Seat::factory()->for($hall)->companion()->create(['row_label' => 'F', 'sort_order' => 0]);
+        $accessible = Seat::factory()->for($hall)->accessible()->create(['row_label' => 'F', 'sort_order' => 1]);
+
+        SeatCompanionLink::create([
+            'accessible_seat_id' => $accessible->id,
+            'companion_seat_id' => $companion->id,
+        ]);
+        $this->forceDeferredConstraints();
+
+        $this->assertTrue($accessible->fresh()->companionSeat->is($companion));
+    }
+
+    public function test_a_skipped_seat_number_does_not_break_a_pair(): void
+    {
+        // Rows that omit a number — 13 is commonly skipped — stay pairable,
+        // because adjacency is defined on sort_order and not on seat_number.
+        // ADR-018.
+        $hall = Hall::factory()->create();
+        $accessible = Seat::factory()->for($hall)->accessible()->create([
+            'row_label' => 'F', 'seat_number' => '12', 'display_label' => 'F12', 'sort_order' => 11,
+        ]);
+        $companion = Seat::factory()->for($hall)->companion()->create([
+            'row_label' => 'F', 'seat_number' => '14', 'display_label' => 'F14', 'sort_order' => 12,
+        ]);
+
+        SeatCompanionLink::create([
+            'accessible_seat_id' => $accessible->id,
+            'companion_seat_id' => $companion->id,
+        ]);
+        $this->forceDeferredConstraints();
+
+        $this->assertTrue($accessible->fresh()->companionSeat->is($companion));
+    }
+
+    public function test_consecutive_sort_order_across_a_row_boundary_is_not_adjacency(): void
+    {
+        // The last seat of one row and the first of the next are consecutive in
+        // sort_order but physically far apart. The same-row rule is what stops
+        // this. ADR-018.
+        $hall = Hall::factory()->create();
+        $accessible = Seat::factory()->for($hall)->accessible()->create(['row_label' => 'A', 'sort_order' => 19]);
+        $companion = Seat::factory()->for($hall)->companion()->create(['row_label' => 'B', 'sort_order' => 20]);
 
         SeatCompanionLink::create([
             'accessible_seat_id' => $accessible->id,

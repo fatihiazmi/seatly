@@ -363,10 +363,11 @@ Implementation notes: covers migration sequencing steps 4 and 5 — movies,
                      PHPStan rejected chr() in SeatFactory as unbounded, which
                      was fixed by computing the row label from a fixed alphabet
                      rather than by silencing the check.
-Open decisions:      D21 — companion-seat adjacency is undefined in every source
-                     document. The four unambiguous rules are enforced; adjacency
-                     is not. Recorded in BASELINE_RECONCILIATION.md. Must close
-                     before C2-03 lets an operator declare pairs freely.
+Open decisions:      none. D21 was raised here — companion-seat adjacency was
+                     undefined in every source document, so the four unambiguous
+                     rules were enforced and adjacency was not. Closed the same
+                     day by ADR-018 (same row, consecutive sort_order) and
+                     enforced by migration 2026_08_10_140000.
 ```
 
 ### C2-02 — Showtime draft and publication
@@ -436,8 +437,8 @@ Implementation notes: covers ST-01 through ST-03 and INV-01. ST-04 cancellation
                      6x10 halls with two accessible/companion pairs each, three
                      movies, and publish-time materialization rehearsed against
                      real PostgreSQL.
-Open decisions:      none new. D21 (companion adjacency, raised in C2-01) is
-                     still open and still does not block this slice.
+Open decisions:      none. D21 was still open while this slice was written and
+                     did not block it; it closed the same day as ADR-018.
 ```
 
 ### C2-03 — Structural integrity after publication

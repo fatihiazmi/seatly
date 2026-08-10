@@ -543,6 +543,73 @@ partially-cancelled showtime to reason about in every race in §13.
 A second venue or franchise introduces genuine segregation-of-duties
 requirements, real refunds enter scope, or notifications are added.
 
+## ADR-018 — Companion-seat adjacency
+
+**Status:** Accepted (Product Owner approval: 2026-08-10). Closes `D21`.
+
+A companion seat is adjacent to its accessible seat when both share the same
+`row_label` **and** their `sort_order` values differ by exactly one. Enforced in
+the `seat_companion_links` deferred constraint trigger, alongside the same-hall,
+classification and both-active rules.
+
+### Context
+
+`LOGICAL_ERD.md` §2.2 required the trigger to enforce that "the declared layout
+relationship is valid/adjacent according to the hall layout", and
+`MVP_POLICY_BASELINE.md` §1 speaks of "one adjacent companion seat". Neither
+defines adjacency, and `C2-01` refused to settle it in code — the four
+unambiguous rules were implemented and adjacency was raised as `D21`.
+
+Three facts shaped the choice:
+
+- No document mentions aisles.
+- `x_position` and `y_position` are nullable and nothing populates them, so
+  true grid adjacency is unavailable without a schema change and a geometry
+  decision that belongs with the Phase 4 seat grid.
+- `sort_order` is `NOT NULL`, unique per hall, and already the canonical display
+  and locking order.
+
+`BO-08` — the exact accessibility standard to certify against — is itself still
+open, so no external standard currently binds this definition.
+
+### Decision
+
+Same row, consecutive `sort_order`. Adjacency is symmetric: the companion may
+sit on either side.
+
+Rejected: **same row plus consecutive `seat_number`**, because a row that omits
+a number — 13 is commonly skipped — would falsely reject a genuine pair.
+Rejected: **`sort_order` alone**, because the last seat of one row and the first
+of the next are consecutive but physically far apart.
+Rejected for now: **grid adjacency on `x_position`/`y_position`**, which is the
+only reading that survives an aisle, but which forces every layout to carry
+geometry before the seat grid exists.
+Rejected: **no database enforcement**, which leaves the invariant unowned.
+
+### Known limitation
+
+Two seats either side of an aisle are consecutive in `sort_order`, so the pair
+would be accepted although the companion is not physically beside the accessible
+seat. The schema cannot see an aisle. This is a false accept, visible to any
+human reviewing the layout, and it does not affect allocation correctness —
+pairing remains relational and all-or-none.
+
+### Consequences
+
+- `C2-03` may let an operator declare pairs, with the database rejecting every
+  cross-row, non-consecutive, cross-hall, misclassified or inactive pair.
+- Hall layouts must assign `sort_order` in physical seating order within a row.
+  That was already true — `sort_order` is the display and locking order — but it
+  now carries an accessibility guarantee as well.
+- The `C2-01` limitation note in `BASELINE_RECONCILIATION.md` is superseded.
+
+### Revisit trigger
+
+A hall with an aisle inside a row, `x_position`/`y_position` becoming populated
+and mandatory, or `BO-08` closing on a standard that prescribes adjacency.
+
+---
+
 ## Rejected MVP technologies/features
 
 - Spring Boot, ASP.NET Core, and other backend stacks for this project direction.

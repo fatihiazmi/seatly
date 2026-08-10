@@ -158,7 +158,10 @@ Constraints:
   - accessible side has type `ACCESSIBLE`;
   - companion side has type `COMPANION`;
   - both are active;
-  - the declared layout relationship is valid/adjacent according to the hall layout.
+  - the two seats are adjacent — same `row_label`, `sort_order` differing by
+    exactly one (`ADR-018`, closing `D21`). Adjacency is symmetric; the companion
+    may sit on either side. Two seats either side of an aisle are a known false
+    accept, because no column records aisles.
 
 The two unique keys ensure a seat cannot participate in multiple pairs. PostgreSQL `CHECK` constraints alone cannot inspect referenced seat rows, so this invariant requires a constraint trigger plus service-level validation.
 

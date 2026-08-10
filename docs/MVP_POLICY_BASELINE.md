@@ -21,7 +21,7 @@ seat_companion_links
 - companion_seat_id   UNIQUE FK seats
 ```
 
-A pair contains exactly one accessible seat and zero or one adjacent companion seat. A seat cannot belong to multiple pairs. The UI identifies seat type and pairing using text and semantics, not colour alone.
+A pair contains exactly one accessible seat and zero or one adjacent companion seat. Adjacent means the same row with consecutive `sort_order` (`ADR-018`). A seat cannot belong to multiple pairs. The UI identifies seat type and pairing using text and semantics, not colour alone.
 
 ### Eligibility and privacy
 
